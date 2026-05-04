@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import styles from './page.module.css';
 
 export default function Home() {
   return (
@@ -50,22 +50,10 @@ export default function Home() {
 
       <footer className="footer">
         <div className="container">
-          <p>&copy; 2026 GlowUp3. All rights reserved.</p>
+          <p>© 2026 GlowUp3. All rights reserved.</p>
           <p>Powered by Supabase</p>
         </div>
       </footer>
-
-      <style jsx>{`
-        .cta {
-          padding: 60px 20px;
-          background: #f0f0f0;
-          text-align: center;
-        }
-        .cta h2 {
-          font-size: 2rem;
-          margin-bottom: 10px;
-        }
-      `}</style>
     </main>
   );
 }

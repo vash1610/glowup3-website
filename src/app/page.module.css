@@ -1,0 +1,10 @@
+.cta {
+  padding: 60px 20px;
+  background: #f0f0f0;
+  text-align: center;
+}
+
+.cta h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
