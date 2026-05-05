@@ -3,21 +3,6 @@
    Premium, Animated, Modern Design
    ============================================ */
 
-/* CSS Variables */
-:root {
-  --bg-primary: #050508;
-  --bg-secondary: #0a0a0f;
-  --bg-card: rgba(255, 255, 255, 0.03);
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --text-muted: rgba(255, 255, 255, 0.5);
-  --gradient-1: #667eea;
-  --gradient-2: #764ba2;
-  --border-color: rgba(255, 255, 255, 0.1);
-  --card-radius: 20px;
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 /* Main Container */
 .main {
   position: relative;
