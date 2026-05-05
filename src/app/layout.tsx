@@ -2,8 +2,11 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'GlowUp3 - Book Beauty & Wellness Services',
+  title: '✨ GlowUp3 - Book Beauty & Wellness Services',
   description: 'Connect with top professionals for beauty and wellness services. Book appointments, message professionals, and manage your bookings easily.',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
