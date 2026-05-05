@@ -13,7 +13,7 @@ export function middleware(request: NextRequest) {
     const [username, password] = atob(authHeader.split(' ')[1]).split(':');
     
     // Change these credentials to whatever you want
-    if (username === 'glowup' && password === 'glowup3') {
+    if (username === 'glowup' && password === 'Valeriia@1234') {
       return NextResponse.next();
     }
   }
