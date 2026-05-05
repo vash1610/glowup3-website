@@ -102,9 +102,9 @@ export default function Home() {
             <span>GlowUp3</span>
           </div>
           <div className={styles.navLinks}>
-            <a href="#features">Features</a>
-            <a href="#how-it-works">How It Works</a>
-            <a href="#testimonials">Reviews</a>
+          <a href="/pros">Browse Pros</a>
+            <a href="/pricing">Pricing</a>
+            <a href="/about">About</a>
             <a href="#download" className={styles.navCta}>Get Started</a>
           </div>
         </div>
@@ -126,10 +126,10 @@ export default function Home() {
             message directly, pay securely, and send beautiful gifts — all in one place.
           </p>
           <div className={styles.heroButtons}>
-            <a href="#download" className={styles.primaryBtn}>
+            <a href="https://apps.apple.com/app/glowup3/id123456789" className={styles.primaryBtn}>
               <span>📱</span> Download App
             </a>
-            <a href="#features" className={styles.secondaryBtn}>
+            <a href="/pros" className={styles.secondaryBtn}>
               <span>▶️</span> See Features
             </a>
           </div>
@@ -253,7 +253,7 @@ export default function Home() {
             <span className={styles.featureSubtitle}>{features[activeFeature].subtitle}</span>
             <h3>{features[activeFeature].title}</h3>
             <p>{features[activeFeature].description}</p>
-            <a href="#download" className={styles.featureCta}>
+            <a href="/pricing" className={styles.featureCta}>
               Learn More <span>→</span>
             </a>
           </div>
@@ -370,14 +370,14 @@ export default function Home() {
           <h2>Ready to Glow Up?</h2>
           <p>Join 50,000+ users who trust GlowUp3 for their beauty needs. Download free today.</p>
           <div className={styles.ctaButtons}>
-            <a href="#" className={styles.storeBtn}>
+            <a href="https://apps.apple.com/app/glowup3/id123456789" className={styles.storeBtn}>
               <span>🍎</span>
               <div>
                 <span>Download on the</span>
                 <span>App Store</span>
               </div>
             </a>
-            <a href="#" className={styles.storeBtn}>
+            <a href="https://play.google.com/store/apps/details?id=com.glowup3" className={styles.storeBtn}>
               <span>🤖</span>
               <div>
                 <span>Get it on</span>
@@ -398,40 +398,40 @@ export default function Home() {
             </div>
             <p>The all-in-one beauty booking platform connecting you with top professionals.</p>
             <div className={styles.socialLinks}>
-              <a href="#">📘</a>
-              <a href="#">📸</a>
-              <a href="#">🐦</a>
-              <a href="#">📺</a>
+              <a href="https://facebook.com/glowup3" target="_blank" rel="noopener noreferrer">📘</a>
+              <a href="https://instagram.com/glowup3" target="_blank" rel="noopener noreferrer">📸</a>
+              <a href="https://twitter.com/glowup3" target="_blank" rel="noopener noreferrer">🐦</a>
+              <a href="https://youtube.com/@glowup3" target="_blank" rel="noopener noreferrer">📺</a>
             </div>
           </div>
           <div className={styles.footerLinks}>
             <div className={styles.footerColumn}>
               <h4>Product</h4>
-              <a href="#features">Features</a>
-              <a href="#how-it-works">How It Works</a>
-              <a href="#testimonials">Reviews</a>
-              <a href="#">Pricing</a>
+              <a href="/pros">Browse Pros</a>
+              <a href="/pricing">Pricing</a>
+              <a href="/about">About</a>
+              <a href="#download">Get the App</a>
             </div>
             <div className={styles.footerColumn}>
               <h4>For Pros</h4>
-              <a href="#">Become a Pro</a>
-              <a href="#">Pro Dashboard</a>
-              <a href="#">Success Stories</a>
-              <a href="#">Pro Support</a>
+              <a href="/pros">Become a Pro</a>
+              <a href="/pros/dashboard">Pro Dashboard</a>
+              <a href="/pros/success-stories">Success Stories</a>
+              <a href="/pros/support">Pro Support</a>
             </div>
             <div className={styles.footerColumn}>
               <h4>Company</h4>
-              <a href="#">About Us</a>
-              <a href="#">Blog</a>
-              <a href="#">Careers</a>
-              <a href="#">Contact</a>
+              <a href="/about">About Us</a>
+              <a href="/blog">Blog</a>
+              <a href="/careers">Careers</a>
+              <a href="/contact">Contact</a>
             </div>
             <div className={styles.footerColumn}>
               <h4>Legal</h4>
-              <a href="#">Privacy Policy</a>
-              <a href="#">Terms of Service</a>
-              <a href="#">Cookie Policy</a>
-              <a href="#">GDPR</a>
+              <a href="/legal/privacy">Privacy Policy</a>
+              <a href="/legal/terms">Terms of Service</a>
+              <a href="/legal/cookies">Cookie Policy</a>
+              <a href="/legal/gdpr">GDPR</a>
             </div>
           </div>
         </div>
