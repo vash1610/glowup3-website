@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Icon from '@/components/Icon';
 import styles from './support.module.css';
 
 const faqs = [
@@ -31,25 +32,25 @@ export default function SupportPage() {
         <div className={styles.container}>
           <div className={styles.grid}>
             <div className={styles.resourceCard}>
-              <span className={styles.resourceIcon}>📖</span>
+              <span className={styles.resourceIcon}><Icon name="book" size={28} color="#667eea" /></span>
               <h3>Getting Started Guide</h3>
               <p>Step-by-step walkthrough for new professionals</p>
               <a href="#" className={styles.resourceLink}>Read Guide →</a>
             </div>
             <div className={styles.resourceCard}>
-              <span className={styles.resourceIcon}>🎥</span>
+              <span className={styles.resourceIcon}><Icon name="play" size={28} color="#667eea" /></span>
               <h3>Video Tutorials</h3>
               <p>Watch how top pros optimize their profiles</p>
               <a href="#" className={styles.resourceLink}>Watch Now →</a>
             </div>
             <div className={styles.resourceCard}>
-              <span className={styles.resourceIcon}>💬</span>
+              <span className={styles.resourceIcon}><Icon name="chat" size={28} color="#667eea" /></span>
               <h3>Community Forum</h3>
               <p>Connect with other professionals, share tips</p>
               <a href="#" className={styles.resourceLink}>Join Forum →</a>
             </div>
             <div className={styles.resourceCard}>
-              <span className={styles.resourceIcon}>📞</span>
+              <span className={styles.resourceIcon}><Icon name="email" size={28} color="#667eea" /></span>
               <h3>Priority Support</h3>
               <p>Pro and Studio members get 24/7 priority support</p>
               <a href="#" className={styles.resourceLink}>Contact Support →</a>
@@ -66,7 +67,7 @@ export default function SupportPage() {
               <div key={i} className={`${styles.faqItem} ${openIndex === i ? styles.faqOpen : ''}`}>
                 <button className={styles.faqQuestion} onClick={() => setOpenIndex(openIndex === i ? null : i)}>
                   <span>{faq.q}</span>
-                  <span className={styles.faqIcon}>{openIndex === i ? '−' : '+'}</span>
+                  <span className={styles.faqIcon}><Icon name={openIndex === i ? 'minus' : 'plus'} size={20} color="#667eea" /></span>
                 </button>
                 {openIndex === i && <div className={styles.faqAnswer}>{faq.a}</div>}
               </div>

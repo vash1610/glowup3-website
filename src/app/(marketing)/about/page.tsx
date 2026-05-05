@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import Icon from '@/components/Icon';
 import styles from './about.module.css';
 
 const team = [
-  { name: 'Anna Novak', role: 'CEO & Founder', bio: 'Former beauty salon owner who saw the need for better booking technology.', avatar: '👩‍💼' },
-  { name: 'David Chen', role: 'CTO', bio: '10+ years building scalable platforms. Previously at Google and Uber.', avatar: '👨‍💻' },
-  { name: 'Sarah Williams', role: 'Head of Design', bio: 'Award-winning designer passionate about beautiful user experiences.', avatar: '🎨' },
-  { name: 'Marcus Johnson', role: 'VP of Growth', bio: 'Scaled three startups from 0 to 1M+ users. Beauty industry expert.', avatar: '📈' },
+  { name: 'Anna Novak', role: 'CEO & Founder', bio: 'Former beauty salon owner who saw the need for better booking technology.', icon: 'profile' },
+  { name: 'David Chen', role: 'CTO', bio: '10+ years building scalable platforms. Previously at Google and Uber.', icon: 'code' },
+  { name: 'Sarah Williams', role: 'Head of Design', bio: 'Award-winning designer passionate about beautiful user experiences.', icon: 'design' },
+  { name: 'Marcus Johnson', role: 'VP of Growth', bio: 'Scaled three startups from 0 to 1M+ users. Beauty industry expert.', icon: 'growth' },
 ];
 
 const milestones = [
@@ -18,6 +18,13 @@ const milestones = [
   { year: '2025', event: 'Raised $2M seed funding from top investors' },
   { year: '2025', event: 'Expanded to 5 countries across Europe' },
   { year: '2026', event: '50K+ downloads and 1,200+ active professionals' },
+];
+
+const values = [
+  { icon: 'shield', title: 'Trust First', desc: 'Every professional is verified. Every review is authentic. Every payment is secure.' },
+  { icon: 'lightning', title: 'Instant Access', desc: 'No more waiting. Find available professionals and book in seconds.' },
+  { icon: 'heart', title: 'Community', desc: "We're building a community where beauty professionals and clients thrive together." },
+  { icon: 'globe', title: 'Global', desc: 'Breaking down language barriers with real-time translation and global reach.' },
 ];
 
 export default function AboutPage() {
@@ -41,26 +48,13 @@ export default function AboutPage() {
         <div className={styles.container}>
           <h2 className={styles.sectionTitle}>Our Values</h2>
           <div className={styles.valuesGrid}>
-            <div className={styles.valueCard}>
-              <span className={styles.valueIcon}>🤝</span>
-              <h3>Trust First</h3>
-              <p>Every professional is verified. Every review is authentic. Every payment is secure.</p>
-            </div>
-            <div className={styles.valueCard}>
-              <span className={styles.valueIcon}>⚡</span>
-              <h3>Instant Access</h3>
-              <p>No more waiting. Find available professionals and book in seconds.</p>
-            </div>
-            <div className={styles.valueCard}>
-              <span className={styles.valueIcon}>💜</span>
-              <h3>Community</h3>
-              <p>We're building a community where beauty professionals and clients thrive together.</p>
-            </div>
-            <div className={styles.valueCard}>
-              <span className={styles.valueIcon}>🌍</span>
-              <h3>Global</h3>
-              <p>Breaking down language barriers with real-time translation and global reach.</p>
-            </div>
+            {values.map((v, i) => (
+              <div key={i} className={styles.valueCard}>
+                <span className={styles.valueIcon}><Icon name={v.icon as any} size={36} color="#667eea" /></span>
+                <h3>{v.title}</h3>
+                <p>{v.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -86,7 +80,7 @@ export default function AboutPage() {
           <div className={styles.teamGrid}>
             {team.map((member, i) => (
               <div key={i} className={styles.teamCard}>
-                <div className={styles.teamAvatar}>{member.avatar}</div>
+                <div className={styles.teamAvatar}><Icon name={member.icon as any} size={36} color="#667eea" /></div>
                 <h3 className={styles.teamName}>{member.name}</h3>
                 <span className={styles.teamRole}>{member.role}</span>
                 <p className={styles.teamBio}>{member.bio}</p>

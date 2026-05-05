@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Icon from '@/components/Icon';
 import styles from './contact.module.css';
 
 export default function ContactPage() {
@@ -29,17 +30,17 @@ export default function ContactPage() {
           <div className={styles.grid}>
             <div className={styles.info}>
               <div className={styles.infoCard}>
-                <span className={styles.infoIcon}>📧</span>
+                <span className={styles.infoIcon}><Icon name="email" size={24} color="#667eea" /></span>
                 <h3>Email</h3>
                 <p>hello@glowup3.com</p>
               </div>
               <div className={styles.infoCard}>
-                <span className={styles.infoIcon}>📍</span>
+                <span className={styles.infoIcon}><Icon name="location" size={24} color="#667eea" /></span>
                 <h3>Office</h3>
                 <p>Na Příkopě 15, Prague 1<br />110 00, Czech Republic</p>
               </div>
               <div className={styles.infoCard}>
-                <span className={styles.infoIcon}>⏰</span>
+                <span className={styles.infoIcon}><Icon name="clock" size={24} color="#667eea" /></span>
                 <h3>Hours</h3>
                 <p>Mon–Fri: 9:00 – 18:00 CET<br />Weekend: Closed</p>
               </div>
@@ -48,7 +49,7 @@ export default function ContactPage() {
             <div className={styles.formWrapper}>
               {submitted ? (
                 <div className={styles.success}>
-                  <span className={styles.successIcon}>✅</span>
+                  <span className={styles.successIcon}><Icon name="check" size={48} color="#34d399" /></span>
                   <h2>Message Sent!</h2>
                   <p>Thanks for reaching out. We'll get back to you within 24 hours.</p>
                   <button className={styles.resetBtn} onClick={() => { setSubmitted(false); setForm({ name: '', email: '', subject: '', message: '' }); }}>

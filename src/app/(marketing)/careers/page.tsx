@@ -1,24 +1,25 @@
 'use client';
 
 import Link from 'next/link';
+import Icon from '@/components/Icon';
 import styles from './careers.module.css';
 
 const jobs = [
-  { title: 'Senior Full-Stack Developer', dept: 'Engineering', location: 'Prague, CZ (Hybrid)', type: 'Full-time', emoji: '💻' },
-  { title: 'Product Designer', dept: 'Design', location: 'Prague, CZ (Hybrid)', type: 'Full-time', emoji: '🎨' },
-  { title: 'Growth Marketing Lead', dept: 'Marketing', location: 'Remote (EU)', type: 'Full-time', emoji: '📈' },
-  { title: 'Customer Success Manager', dept: 'Operations', location: 'Remote (EU)', type: 'Full-time', emoji: '🤝' },
-  { title: 'iOS Developer', dept: 'Engineering', location: 'Prague, CZ (Hybrid)', type: 'Full-time', emoji: '📱' },
-  { title: 'Data Analyst', dept: 'Data', location: 'Remote (EU)', type: 'Full-time', emoji: '📊' },
+  { title: 'Senior Full-Stack Developer', dept: 'Engineering', location: 'Prague, CZ (Hybrid)', type: 'Full-time', icon: 'code' },
+  { title: 'Product Designer', dept: 'Design', location: 'Prague, CZ (Hybrid)', type: 'Full-time', icon: 'design' },
+  { title: 'Growth Marketing Lead', dept: 'Marketing', location: 'Remote (EU)', type: 'Full-time', icon: 'growth' },
+  { title: 'Customer Success Manager', dept: 'Operations', location: 'Remote (EU)', type: 'Full-time', icon: 'handshake' },
+  { title: 'iOS Developer', dept: 'Engineering', location: 'Prague, CZ (Hybrid)', type: 'Full-time', icon: 'phone' },
+  { title: 'Data Analyst', dept: 'Data', location: 'Remote (EU)', type: 'Full-time', icon: 'analytics' },
 ];
 
 const perks = [
-  { icon: '🏖️', title: 'Unlimited PTO', desc: 'Take time when you need it. We trust you.' },
-  { icon: '💪', title: 'Wellness Budget', desc: '€500/year for gym, massage, or therapy.' },
-  { icon: '📚', title: 'Learning Fund', desc: '€2,000/year for courses and conferences.' },
-  { icon: '🌍', title: 'Remote Friendly', desc: 'Work from anywhere in Europe.' },
-  { icon: '🥗', title: 'Lunch & Snacks', desc: 'Daily catered lunch in our Prague office.' },
-  { icon: '🚄', title: 'Transit Pass', desc: 'Fully covered public transportation.' },
+  { icon: 'vacation', title: 'Unlimited PTO', desc: 'Take time when you need it. We trust you.' },
+  { icon: 'fitness', title: 'Wellness Budget', desc: '€500/year for gym, massage, or therapy.' },
+  { icon: 'book', title: 'Learning Fund', desc: '€2,000/year for courses and conferences.' },
+  { icon: 'globe', title: 'Remote Friendly', desc: 'Work from anywhere in Europe.' },
+  { icon: 'food', title: 'Lunch & Snacks', desc: 'Daily catered lunch in our Prague office.' },
+  { icon: 'transit', title: 'Transit Pass', desc: 'Fully covered public transportation.' },
 ];
 
 export default function CareersPage() {
@@ -39,7 +40,7 @@ export default function CareersPage() {
           <div className={styles.perksGrid}>
             {perks.map((p, i) => (
               <div key={i} className={styles.perkCard}>
-                <span className={styles.perkIcon}>{p.icon}</span>
+                <span className={styles.perkIcon}><Icon name={p.icon as any} size={36} color="#667eea" /></span>
                 <h3>{p.title}</h3>
                 <p>{p.desc}</p>
               </div>
@@ -55,7 +56,7 @@ export default function CareersPage() {
             {jobs.map((job, i) => (
               <div key={i} className={styles.jobCard}>
                 <div className={styles.jobLeft}>
-                  <span className={styles.jobEmoji}>{job.emoji}</span>
+                  <span className={styles.jobEmoji}><Icon name={job.icon as any} size={28} color="#667eea" /></span>
                   <div>
                     <h3 className={styles.jobTitle}>{job.title}</h3>
                     <div className={styles.jobMeta}>

@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import Icon from '@/components/Icon';
 import styles from './dashboard.module.css';
 
 const stats = [
-  { label: 'Total Bookings', value: '47', change: '+12%', icon: '📅' },
-  { label: 'Revenue', value: '€2,340', change: '+18%', icon: '💰' },
-  { label: 'Rating', value: '4.9★', change: '+0.1', icon: '⭐' },
-  { label: 'New Clients', value: '12', change: '+8', icon: '👤' },
+  { label: 'Total Bookings', value: '47', change: '+12%', icon: 'calendar' },
+  { label: 'Revenue', value: '€2,340', change: '+18%', icon: 'money' },
+  { label: 'Rating', value: '4.9★', change: '+0.1', icon: 'star' },
+  { label: 'New Clients', value: '12', change: '+8', icon: 'profile' },
 ];
 
 const bookings = [
@@ -16,6 +17,13 @@ const bookings = [
   { client: 'Klára V.', service: 'Full Color', date: 'Tomorrow, 10:00', status: 'Pending' },
   { client: 'Tomáš R.', service: 'Haircut', date: 'Tomorrow, 15:00', status: 'Confirmed' },
 ];
+
+const iconMap: Record<string, React.ReactNode> = {
+  calendar: <Icon name="calendar" size={24} />,
+  money: <Icon name="money" size={24} />,
+  star: <Icon name="star" size={24} color="#fbbf24" />,
+  profile: <Icon name="profile" size={24} />,
+};
 
 export default function DashboardPage() {
   return (
@@ -34,7 +42,7 @@ export default function DashboardPage() {
           <div className={styles.statsGrid}>
             {stats.map((s, i) => (
               <div key={i} className={styles.statCard}>
-                <span className={styles.statIcon}>{s.icon}</span>
+                <span className={styles.statIcon}>{iconMap[s.icon]}</span>
                 <div className={styles.statInfo}>
                   <span className={styles.statValue}>{s.value}</span>
                   <span className={styles.statLabel}>{s.label}</span>
@@ -74,12 +82,12 @@ export default function DashboardPage() {
         <div className={styles.container}>
           <div className={styles.linksGrid}>
             <Link href="/pros/success-stories" className={styles.linkCard}>
-              <span className={styles.linkIcon}>🌟</span>
+              <span className={styles.linkIcon}><Icon name="spotlight" size={36} color="#667eea" /></span>
               <h3>Success Stories</h3>
               <p>See how other pros are thriving</p>
             </Link>
             <Link href="/pros/support" className={styles.linkCard}>
-              <span className={styles.linkIcon}>🛠️</span>
+              <span className={styles.linkIcon}><Icon name="lock" size={36} color="#667eea" /></span>
               <h3>Pro Support</h3>
               <p>Get help and resources</p>
             </Link>

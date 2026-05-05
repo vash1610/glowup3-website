@@ -1,7 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Icon from '@/components/Icon';
 import styles from './page.module.css';
+
+const iconMap: Record<string, React.ReactNode> = {
+  lightning: <Icon name="lightning" size={24} />,
+  gift: <Icon name="gift" size={24} />,
+  chat: <Icon name="chat" size={24} />,
+  wallet: <Icon name="wallet" size={24} />,
+  team: <Icon name="team" size={24} />,
+  shield: <Icon name="shield" size={24} />,
+};
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0);
@@ -21,42 +31,42 @@ export default function Home() {
 
   const features = [
     {
-      icon: '⚡',
+      icon: 'lightning',
       title: 'Available Now',
       subtitle: 'Get Instant Bookings',
       description: 'AI-powered system finds professionals available right now. Smart discounts automatically suggest the best prices during off-peak hours.',
       color: '#fbbf24'
     },
     {
-      icon: '🎁',
+      icon: 'gift',
       title: 'Gift Cards & Items',
       subtitle: 'Perfect for Any Occasion',
       description: 'Send beautiful digital gifts for any service. 10+ stunning designs for birthdays, holidays, or just because. Redeemable instantly.',
       color: '#f472b6'
     },
     {
-      icon: '💬',
+      icon: 'chat',
       title: 'Real-Time Chat',
       subtitle: 'Translate Automatically',
       description: 'Built-in translation lets you communicate in any language. Reactions, quick replies, and typing indicators make chatting effortless.',
       color: '#60a5fa'
     },
     {
-      icon: '💳',
+      icon: 'wallet',
       title: 'Secure Wallet',
       subtitle: 'Money Protection',
       description: 'Your money is held safely in escrow until the service is complete. Withdraw earnings instantly to your bank account.',
       color: '#34d399'
     },
     {
-      icon: '👥',
+      icon: 'team',
       title: 'Team Workspaces',
       subtitle: 'Manage Your Team',
       description: 'Create teams, share calendars, split earnings, and collaborate on bookings. Perfect for salons and studios.',
       color: '#a78bfa'
     },
     {
-      icon: '⭐',
+      icon: 'shield',
       title: 'Trust System',
       subtitle: 'Verified Everyone',
       description: 'Both customers and professionals build trust scores. Identity verified, reviews authentic, everyone accountable.',
@@ -98,7 +108,7 @@ export default function Home() {
       <nav className={styles.nav}>
         <div className={styles.navContent}>
           <div className={styles.logo}>
-            <span className={styles.logoIcon}>✨</span>
+            <Icon name="sparkle" size={24} color="#667eea" />
             <span>GlowUp3</span>
           </div>
           <div className={styles.navLinks}>
@@ -127,10 +137,10 @@ export default function Home() {
           </p>
           <div className={styles.heroButtons}>
             <a href="https://apps.apple.com/app/glowup3/id123456789" className={styles.primaryBtn}>
-              <span>📱</span> Download App
+              <Icon name="apple" size={20} color="#fff" /> Download App
             </a>
             <a href="/pros" className={styles.secondaryBtn}>
-              <span>▶️</span> See Features
+              <Icon name="play" size={18} /> See Features
             </a>
           </div>
           
@@ -161,30 +171,31 @@ export default function Home() {
               <div className={styles.phoneNotch} />
               <div className={styles.phoneScreen}>
                 <div className={styles.appHeader}>
-                  <span>✨ GlowUp3</span>
-                  <span>👤</span>
+                  <Icon name="sparkle" size={16} color="#667eea" />
+                  <span> GlowUp3</span>
+                  <Icon name="profile" size={16} />
                 </div>
                 <div className={styles.appSearch}>
-                  <span>🔍</span>
+                  <Icon name="search" size={14} />
                   <span>Search services...</span>
                 </div>
                 <div className={styles.appSection}>
                   <h4>Available Now</h4>
                   <div className={styles.appCards}>
                     <div className={styles.appCard}>
-                      <div className={styles.cardIcon}>💇</div>
+                      <div className={styles.cardIcon}><Icon name="hair" size={28} color="#667eea" /></div>
                       <div className={styles.cardInfo}>
                         <span className={styles.cardTitle}>Hair Styling</span>
                         <span className={styles.cardPro}>Anna K. • 4.9★</span>
-                        <span className={styles.cardTime}>⚡ Available Now</span>
+                        <span className={styles.cardTime}><Icon name="lightning" size={12} color="#fbbf24" /> Available Now</span>
                       </div>
                     </div>
                     <div className={styles.appCard}>
-                      <div className={styles.cardIcon}>💆</div>
+                      <div className={styles.cardIcon}><Icon name="massage" size={28} color="#667eea" /></div>
                       <div className={styles.cardInfo}>
                         <span className={styles.cardTitle}>Massage</span>
                         <span className={styles.cardPro}>Petr M. • 4.8★</span>
-                        <span className={styles.cardTime}>⚡ Available Now</span>
+                        <span className={styles.cardTime}><Icon name="lightning" size={12} color="#fbbf24" /> Available Now</span>
                       </div>
                     </div>
                   </div>
@@ -192,10 +203,10 @@ export default function Home() {
                 <div className={styles.appSection}>
                   <h4>Quick Book</h4>
                   <div className={styles.appQuickActions}>
-                    <div className={styles.quickAction}>💇 Hair</div>
-                    <div className={styles.quickAction}>💄 Makeup</div>
-                    <div className={styles.quickAction}>💅 Nails</div>
-                    <div className={styles.quickAction}>💆 Spa</div>
+                    <div className={styles.quickAction}><Icon name="hair" size={16} /> Hair</div>
+                    <div className={styles.quickAction}><Icon name="makeup" size={16} /> Makeup</div>
+                    <div className={styles.quickAction}><Icon name="nails" size={16} /> Nails</div>
+                    <div className={styles.quickAction}><Icon name="massage" size={16} /> Spa</div>
                   </div>
                 </div>
               </div>
@@ -208,11 +219,11 @@ export default function Home() {
       <section className={styles.trusted}>
         <p>Trusted by professionals at</p>
         <div className={styles.trustedLogos}>
-          <span>🏠 Studios</span>
-          <span>💇 Salons</span>
-          <span>🧖 Spas</span>
-          <span>💪 Fitness</span>
-          <span>🎨 Beauty</span>
+          <span><Icon name="store" size={16} /> Studios</span>
+          <span><Icon name="hair" size={16} /> Salons</span>
+          <span><Icon name="spa" size={16} /> Spas</span>
+          <span><Icon name="fitness" size={16} /> Fitness</span>
+          <span><Icon name="design" size={16} /> Beauty</span>
         </div>
       </section>
 
@@ -235,7 +246,7 @@ export default function Home() {
               onClick={() => setActiveFeature(index)}
               style={{ '--accent': feature.color } as React.CSSProperties}
             >
-              <span className={styles.tabIcon}>{feature.icon}</span>
+              <span className={styles.tabIcon}>{iconMap[feature.icon]}</span>
               <span className={styles.tabTitle}>{feature.title}</span>
             </button>
           ))}
@@ -245,7 +256,7 @@ export default function Home() {
         <div className={styles.featureDetail}>
           <div className={styles.featureVisual}>
             <div className={styles.featureBox} style={{ '--accent': features[activeFeature].color } as React.CSSProperties}>
-              <span className={styles.featureBoxIcon}>{features[activeFeature].icon}</span>
+              <span className={styles.featureBoxIcon}>{iconMap[features[activeFeature].icon]}</span>
               <span className={styles.featureBoxTitle}>{features[activeFeature].title}</span>
             </div>
           </div>
@@ -267,7 +278,7 @@ export default function Home() {
               className={styles.featureCard}
               style={{ '--accent': feature.color } as React.CSSProperties}
             >
-              <div className={styles.featureCardIcon}>{feature.icon}</div>
+              <div className={styles.featureCardIcon}>{iconMap[feature.icon]}</div>
               <h3>{feature.title}</h3>
               <p>{feature.description}</p>
             </div>
@@ -283,21 +294,21 @@ export default function Home() {
         </div>
         <div className={styles.steps}>
           <div className={styles.step}>
-            <div className={styles.stepIcon}>📱</div>
+            <div className={styles.stepIcon}><Icon name="phone" size={32} color="#667eea" /></div>
             <div className={styles.stepNumber}>1</div>
             <h3>Download & Sign Up</h3>
             <p>Get the app and create your free account in under 2 minutes. No credit card required.</p>
           </div>
           <div className={styles.stepArrow}>→</div>
           <div className={styles.step}>
-            <div className={styles.stepIcon}>🔍</div>
+            <div className={styles.stepIcon}><Icon name="search" size={32} color="#667eea" /></div>
             <div className={styles.stepNumber}>2</div>
             <h3>Find Your Pro</h3>
             <p>Browse verified professionals, read reviews, check availability, and book your time.</p>
           </div>
           <div className={styles.stepArrow}>→</div>
           <div className={styles.step}>
-            <div className={styles.stepIcon}>✨</div>
+            <div className={styles.stepIcon}><Icon name="sparkle" size={32} color="#667eea" /></div>
             <div className={styles.stepNumber}>3</div>
             <h3>Glow Up!</h3>
             <p>Show up, enjoy your service, and leave a review to help others.</p>
@@ -308,20 +319,20 @@ export default function Home() {
       {/* Available Now Highlight */}
       <section className={styles.highlight}>
         <div className={styles.highlightContent}>
-          <span className={styles.highlightBadge}>⚡ NOW FEATURE</span>
+          <span className={styles.highlightBadge}><Icon name="lightning" size={14} color="#fbbf24" /> NOW FEATURE</span>
           <h2>Need Something Today?</h2>
           <p>Our AI-powered "Available Now" feature finds professionals who are ready to see you right now. Can't wait? No problem — GlowUp3 has you covered.</p>
           <div className={styles.highlightFeatures}>
             <div className={styles.highlightFeature}>
-              <span>⚡</span>
+              <Icon name="lightning" size={18} color="#fbbf24" />
               <span>Instant Matching</span>
             </div>
             <div className={styles.highlightFeature}>
-              <span>🤖</span>
+              <Icon name="bulb" size={18} color="#fbbf24" />
               <span>Smart Discounts</span>
             </div>
             <div className={styles.highlightFeature}>
-              <span>📍</span>
+              <Icon name="location" size={18} color="#fbbf24" />
               <span>Location Aware</span>
             </div>
           </div>
@@ -331,7 +342,7 @@ export default function Home() {
             <span className={styles.discountLabel}>AI Suggested Discount</span>
             <span className={styles.discountPercent}>25% OFF</span>
             <span className={styles.discountReason}>Slow period pricing</span>
-            <div className={styles.discountTimer}>⏰ Ends in 2h 15m</div>
+            <div className={styles.discountTimer}><Icon name="clock" size={14} /> Ends in 2h 15m</div>
           </div>
         </div>
       </section>
@@ -371,14 +382,14 @@ export default function Home() {
           <p>Join 50,000+ users who trust GlowUp3 for their beauty needs. Download free today.</p>
           <div className={styles.ctaButtons}>
             <a href="https://apps.apple.com/app/glowup3/id123456789" className={styles.storeBtn}>
-              <span>🍎</span>
+              <Icon name="apple" size={24} color="#fff" />
               <div>
                 <span>Download on the</span>
                 <span>App Store</span>
               </div>
             </a>
             <a href="https://play.google.com/store/apps/details?id=com.glowup3" className={styles.storeBtn}>
-              <span>🤖</span>
+              <Icon name="android" size={24} color="#fff" />
               <div>
                 <span>Get it on</span>
                 <span>Google Play</span>
@@ -393,15 +404,15 @@ export default function Home() {
         <div className={styles.footerContent}>
           <div className={styles.footerBrand}>
             <div className={styles.logo}>
-              <span className={styles.logoIcon}>✨</span>
+              <Icon name="sparkle" size={24} color="#667eea" />
               <span>GlowUp3</span>
             </div>
             <p>The all-in-one beauty booking platform connecting you with top professionals.</p>
             <div className={styles.socialLinks}>
-              <a href="https://facebook.com/glowup3" target="_blank" rel="noopener noreferrer">📘</a>
-              <a href="https://instagram.com/glowup3" target="_blank" rel="noopener noreferrer">📸</a>
-              <a href="https://twitter.com/glowup3" target="_blank" rel="noopener noreferrer">🐦</a>
-              <a href="https://youtube.com/@glowup3" target="_blank" rel="noopener noreferrer">📺</a>
+              <a href="https://facebook.com/glowup3" target="_blank" rel="noopener noreferrer"><Icon name="facebook" size={20} /></a>
+              <a href="https://instagram.com/glowup3" target="_blank" rel="noopener noreferrer"><Icon name="instagram" size={20} /></a>
+              <a href="https://twitter.com/glowup3" target="_blank" rel="noopener noreferrer"><Icon name="twitter" size={20} /></a>
+              <a href="https://youtube.com/@glowup3" target="_blank" rel="noopener noreferrer"><Icon name="youtube" size={20} /></a>
             </div>
           </div>
           <div className={styles.footerLinks}>
@@ -436,7 +447,7 @@ export default function Home() {
           </div>
         </div>
         <div className={styles.footerBottom}>
-          <p>© 2026 GlowUp3. All rights reserved. Made with 💜 for the beauty community.</p>
+          <p>© 2026 GlowUp3. All rights reserved. Made with <Icon name="heart" size={14} color="#f472b6" /> for the beauty community.</p>
         </div>
       </footer>
     </main>

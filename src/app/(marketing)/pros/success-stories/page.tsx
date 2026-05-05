@@ -1,14 +1,22 @@
 'use client';
 
 import Link from 'next/link';
+import Icon from '@/components/Icon';
 import styles from './success.module.css';
 
 const stories = [
-  { name: 'Anna Novak', role: 'Hair Stylist', location: 'Prague', growth: '3x revenue', image: '💇', quote: 'GlowUp3 completely changed my business. The Available Now feature fills my slow hours with last-minute bookings I would never have gotten otherwise.', before: '€1,500/mo', after: '€4,500/mo', clients: '+200%' },
-  { name: 'David M.', role: 'Massage Therapist', location: 'Brno', growth: '250 clients', image: '💆', quote: 'I was struggling to find clients after moving to a new city. Within 3 months on GlowUp3, I had a full schedule and steady income.', before: '€800/mo', after: '€3,200/mo', clients: '+150%' },
-  { name: 'Studio Glow', role: 'Beauty Salon', location: 'Ostrava', growth: '5x bookings', image: '🏪', quote: 'The team workspace feature allows us to manage 5 stylists seamlessly. Shared calendar, split earnings, and team booking — it\'s everything we needed.', before: '50 bookings/mo', after: '250 bookings/mo', clients: '+400%' },
-  { name: 'Eva & Co.', role: 'Nail Studio', location: 'Prague', growth: '1,000+ clients', image: '💅', quote: 'Gift cards were a game changer. During the holidays, we sold over 200 gift cards — bringing in new customers who came back again and again.', before: '30 bookings/mo', after: '150 bookings/mo', clients: '+300%' },
+  { name: 'Anna Novak', role: 'Hair Stylist', location: 'Prague', growth: '3x revenue', icon: 'hair', quote: 'GlowUp3 completely changed my business. The Available Now feature fills my slow hours with last-minute bookings I would never have gotten otherwise.', before: '€1,500/mo', after: '€4,500/mo', clients: '+200%' },
+  { name: 'David M.', role: 'Massage Therapist', location: 'Brno', growth: '250 clients', icon: 'massage', quote: 'I was struggling to find clients after moving to a new city. Within 3 months on GlowUp3, I had a full schedule and steady income.', before: '€800/mo', after: '€3,200/mo', clients: '+150%' },
+  { name: 'Studio Glow', role: 'Beauty Salon', location: 'Ostrava', growth: '5x bookings', icon: 'store', quote: "The team workspace feature allows us to manage 5 stylists seamlessly. Shared calendar, split earnings, and team booking — it's everything we needed.", before: '50 bookings/mo', after: '250 bookings/mo', clients: '+400%' },
+  { name: 'Eva & Co.', role: 'Nail Studio', location: 'Prague', growth: '1,000+ clients', icon: 'nails', quote: 'Gift cards were a game changer. During the holidays, we sold over 200 gift cards — bringing in new customers who came back again and again.', before: '30 bookings/mo', after: '150 bookings/mo', clients: '+300%' },
 ];
+
+const iconMap: Record<string, React.ReactNode> = {
+  hair: <Icon name="hair" size={40} />,
+  massage: <Icon name="massage" size={40} />,
+  store: <Icon name="store" size={40} />,
+  nails: <Icon name="nails" size={40} />,
+};
 
 export default function SuccessStoriesPage() {
   return (
@@ -27,7 +35,7 @@ export default function SuccessStoriesPage() {
           {stories.map((story, i) => (
             <div key={i} className={styles.storyCard}>
               <div className={styles.storyHeader}>
-                <span className={styles.storyImage}>{story.image}</span>
+                <span className={styles.storyImage}>{iconMap[story.icon]}</span>
                 <div>
                   <h3 className={styles.storyName}>{story.name}</h3>
                   <span className={styles.storyRole}>{story.role} • {story.location}</span>
