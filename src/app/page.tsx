@@ -357,7 +357,9 @@ export default function Home() {
           {testimonials.map((testimonial, index) => (
             <div key={index} className={styles.testimonialCard}>
               <div className={styles.testimonialStars}>
-                {'★'.repeat(testimonial.rating)}
+                {Array.from({ length: testimonial.rating }).map((_, i) => (
+                  <Icon key={i} name="star" size={16} color="#fbbf24" />
+                ))}
               </div>
               <p className={styles.testimonialText}>"{testimonial.text}"</p>
               <div className={styles.testimonialAuthor}>
