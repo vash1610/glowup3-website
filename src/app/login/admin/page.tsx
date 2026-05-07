@@ -6,44 +6,55 @@ import { useRouter } from 'next/navigation';
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [passkey, setPasskey] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [rateLimitReset, setRateLimitReset] = useState<number | null>(null);
+  const [debug, setDebug] = useState('');
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    setRateLimitReset(null);
+    setDebug('Starting login...');
     setIsLoading(true);
 
     try {
+      setDebug('Sending request...');
       const response = await fetch('/api/admin/auth/initiate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, passkey }),
+        body: JSON.stringify({ email, password }),
       });
 
+      setDebug('Response received: ' + response.status);
       const data = await response.json();
+      setDebug('Data: ' + JSON.stringify(data));
 
       if (!response.ok) {
-        if (response.status === 429) {
-          setRateLimitReset(data.resetInSeconds);
-          setError(`Too many attempts. Please try again in ${Math.ceil(data.resetInSeconds / 60)} minutes.`);
-        } else {
-          setError(data.error || 'Login failed');
-        }
+        setError(data.error || 'Login failed');
+        setIsLoading(false);
         return;
       }
 
       if (data.success) {
-        sessionStorage.setItem('pending_admin_email', email);
-        router.push('/login/admin/verify');
+        setDebug('Success! Setting cookie and redirecting...');
+        
+        // Set the cookie for middleware authentication
+        document.cookie = `admin_session=${data.token}; path=/; max-age=${24*60*60}; samesite=strict`;
+        
+        // Also keep in localStorage for client-side checks
+        localStorage.setItem('admin_token', data.token);
+        localStorage.setItem('admin_email', data.admin.email);
+        localStorage.setItem('admin_role', data.admin.role);
+        
+        // Redirect
+        window.location.href = '/admin';
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError('An unexpected error occurred. Please try again.');
+      setDebug('Error: ' + err);
     } finally {
       setIsLoading(false);
     }
@@ -110,10 +121,10 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
-            {/* Passkey Field */}
+            {/* Password Field */}
             <div>
-              <label htmlFor="passkey" className="block text-sm font-medium text-slate-300 mb-2">
-                Passkey
+              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
+                Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -128,21 +139,29 @@ export default function AdminLoginPage() {
                     strokeLinejoin="round"
                     className="text-slate-500"
                   >
-                    <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" />
                   </svg>
                 </div>
                 <input
-                  id="passkey"
+                  id="password"
                   type="password"
-                  value={passkey}
-                  onChange={(e) => setPasskey(e.target.value)}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                   className="w-full pl-10 pr-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="Enter your passkey"
+                  placeholder="Enter your password"
                   autoComplete="current-password"
                 />
               </div>
             </div>
+
+            {/* Debug Info */}
+            {debug && (
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3">
+                <p className="text-xs text-blue-400 font-mono">{debug}</p>
+              </div>
+            )}
 
             {/* Error Message */}
             {error && (
@@ -168,32 +187,6 @@ export default function AdminLoginPage() {
               </div>
             )}
 
-            {/* Rate Limit Warning */}
-            {rateLimitReset !== null && (
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
-                <div className="flex items-center">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-amber-400 mr-3 flex-shrink-0"
-                  >
-                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                    <line x1="12" y1="9" x2="12" y2="13" />
-                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                  </svg>
-                  <p className="text-sm text-amber-400">
-                    Account temporarily locked. Try again in {Math.ceil(rateLimitReset / 60)} minutes.
-                  </p>
-                </div>
-              </div>
-            )}
-
             {/* Submit Button */}
             <button
               type="submit"
@@ -212,26 +205,10 @@ export default function AdminLoginPage() {
                     <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
                     <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor" className="opacity-75" />
                   </svg>
-                  Sending Code...
+                  Signing in...
                 </>
               ) : (
-                <>
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="mr-2"
-                  >
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                    <polyline points="22,6 12,13 2,6" />
-                  </svg>
-                  Send Verification Code
-                </>
+                'Sign In'
               )}
             </button>
           </form>
@@ -253,8 +230,7 @@ export default function AdminLoginPage() {
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
               <p className="text-xs text-slate-500">
-                Your connection is secure and encrypted. After verifying your credentials, 
-                a 6-digit code will be sent to your registered email address.
+                Your connection is secure and encrypted.
               </p>
             </div>
           </div>
