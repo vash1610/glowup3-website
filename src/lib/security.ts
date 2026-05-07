@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { createAdminClient } from './supabase-admin';
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
@@ -21,7 +22,7 @@ export function rateLimit(ip: string): { success: boolean; remaining: number; re
   }
 
   record.count++;
-  return { success: true, remaining: RATE_LIMIT_MAX - record.count, resetTime: record.resetTime };
+  return { success: true, remaining: RATE_LIMIT_MAX - record.count, resetTime: now + RATE_LIMIT_WINDOW };
 }
 
 // Sanitize input to prevent XSS
@@ -69,4 +70,47 @@ export function secureResponse(data: unknown, status = 200) {
       ...getCorsHeaders(),
     },
   });
+}
+
+interface AdminSession {
+  userId: string;
+  email: string;
+  role: string;
+}
+
+export async function verifyAdminSession(request: NextRequest): Promise<AdminSession | null> {
+  try {
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
+    }
+
+    const token = authHeader.substring(7);
+    
+    const supabase = createAdminClient();
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      return null;
+    }
+
+    // Check if user has admin role in metadata or user_roles table
+    const isAdmin = user.user_metadata?.role === 'admin' || 
+                    user.user_metadata?.is_admin === true ||
+                    user.app_metadata?.role === 'admin' ||
+                    user.app_metadata?.is_admin === true;
+    
+    if (!isAdmin) {
+      return null;
+    }
+
+    return {
+      userId: user.id,
+      email: user.email || '',
+      role: 'admin'
+    };
+  } catch (err) {
+    console.error('Error verifying admin session:', err);
+    return null;
+  }
 }
