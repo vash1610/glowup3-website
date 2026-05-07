@@ -117,21 +117,21 @@ export default function UserCard({
             <QuickAction
               icon={MoreVertical}
               label="View details"
-              onClick={(e: React.MouseEvent) => { e.stopPropagation(); onView(); }}
+              onClick={(e) => { e?.stopPropagation(); onView(); }}
             />
           )}
           {onFlag && (
             <QuickAction
               icon={Flag}
               label="Flag user"
-              onClick={(e: React.MouseEvent) => { e.stopPropagation(); onFlag(); }}
+              onClick={(e) => { e?.stopPropagation(); onFlag(); }}
             />
           )}
           {onLock && (
             <QuickAction
               icon={user.status === 'suspended' ? UserCheck : Ban}
               label={user.status === 'suspended' ? 'Unlock user' : 'Lock user'}
-              onClick={(e: React.MouseEvent) => { e.stopPropagation(); onLock(); }}
+              onClick={(e) => { e?.stopPropagation(); onLock(); }}
               variant={user.status === 'suspended' ? 'success' : 'danger'}
             />
           )}

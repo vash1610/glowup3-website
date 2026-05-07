@@ -6,7 +6,7 @@ import { LucideIcon } from 'lucide-react';
 interface QuickActionProps {
   icon: LucideIcon;
   label: string;
-  onClick: () => void;
+  onClick: (e?: React.MouseEvent) => void;
   variant?: 'default' | 'danger' | 'success';
   disabled?: boolean;
   className?: string;

@@ -4,7 +4,7 @@ import React from 'react';
 
 type StatusType = 
   | 'success' | 'warning' | 'error' | 'info' | 'pending' | 'neutral'
-  | 'active' | 'inactive' | 'completed' | 'cancelled' | 'refunded'
+  | 'active' | 'inactive' | 'completed' | 'cancelled' | 'refunded' | 'failed'
   | 'paid' | 'unpaid' | 'partial' | 'draft';
 
 interface StatusBadgeProps {
@@ -26,6 +26,7 @@ const statusConfig: Record<StatusType, { color: string; bgColor: string; label: 
   completed: { color: 'text-green-400', bgColor: 'bg-green-400/10', label: 'Completed' },
   cancelled: { color: 'text-red-400', bgColor: 'bg-red-400/10', label: 'Cancelled' },
   refunded: { color: 'text-purple-400', bgColor: 'bg-purple-400/10', label: 'Refunded' },
+  failed: { color: 'text-red-400', bgColor: 'bg-red-400/10', label: 'Failed' },
   paid: { color: 'text-green-400', bgColor: 'bg-green-400/10', label: 'Paid' },
   unpaid: { color: 'text-red-400', bgColor: 'bg-red-400/10', label: 'Unpaid' },
   partial: { color: 'text-yellow-400', bgColor: 'bg-yellow-400/10', label: 'Partial' },
