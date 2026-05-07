@@ -1,0 +1,19 @@
+.page { position: relative; min-height: 100vh; background: var(--bg-primary); color: var(--text-primary); overflow-x: hidden; }
+.bgOrb { position: fixed; top: -20%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(102,126,234,.15) 0%, transparent 70%); border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; }
+.container { max-width: 800px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
+.backLink { display: inline-block; color: var(--text-muted); font-size: .9rem; margin-bottom: 2rem; transition: color .2s; }
+.backLink:hover { color: var(--text-primary); }
+
+.hero { padding: 8rem 0 2rem; text-align: center; }
+.title { font-size: 2.5rem; margin-bottom: .5rem; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.date { font-size: .9rem; color: var(--text-muted); }
+
+.content { padding: 2rem 0 6rem; }
+
+.prose h2 { font-size: 1.3rem; margin: 2rem 0 1rem; color: var(--text-primary); }
+.prose h2:first-child { margin-top: 0; }
+.prose p { font-size: .95rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem; }
+.prose a { color: var(--gradient-1); transition: var(--transition); }
+.prose a:hover { color: var(--gradient-2); }
+
+@media (max-width: 768px) { .title { font-size: 2rem; } }
