@@ -121,11 +121,42 @@ export default function AdminNav() {
         </div>
       </div>
 
-      {/* SPACER for page content - pushes content to right of sidebar */}
+      {/* WRAPPER for page content - ensures content starts AFTER sidebar */}
       <div style={{
-        width: '260px',
-        flexShrink: 0
-      }} />
+        marginLeft: '260px',
+        minHeight: '100vh',
+        backgroundColor: '#050508'
+      }}>
+        {/* Top Header Bar */}
+        <div style={{
+          height: '60px',
+          backgroundColor: '#0a0a0f',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 24px',
+          position: 'sticky',
+          top: 0,
+          zIndex: 50
+        }}>
+          <h2 style={{
+            color: 'white',
+            fontSize: '18px',
+            fontWeight: '500',
+            margin: 0
+          }}>
+            {navItems.find(item => pathname === item.href || 
+              (item.href !== '/admin' && pathname.startsWith(item.href)))?.name || 'Dashboard'}
+          </h2>
+        </div>
+        
+        {/* Page Content */}
+        <div style={{
+          padding: '24px'
+        }}>
+          {/* Pages render their content here as children */}
+        </div>
+      </div>
     </>
   );
 }
