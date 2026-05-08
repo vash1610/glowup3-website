@@ -11,8 +11,7 @@ import {
   Wallet,
   FileText,
   TrendingUp,
-  Settings,
-  ChevronRight
+  Settings
 } from 'lucide-react';
 
 const navItems = [
@@ -31,27 +30,28 @@ export default function AdminNav() {
 
   return (
     <>
-      {/* VERTICAL SIDEBAR - Left Side - Fixed position */}
+      {/* HORIZONTAL TOP BAR */}
       <div style={{
         position: 'fixed',
         top: 0,
         left: 0,
-        width: '260px',
-        height: '100vh',
+        right: 0,
+        height: '70px',
         backgroundColor: '#1a1a2e',
-        borderRight: '1px solid rgba(255,255,255,0.1)',
+        borderBottom: '2px solid #667eea',
         display: 'flex',
-        flexDirection: 'column',
-        zIndex: 100
+        alignItems: 'center',
+        padding: '0 24px',
+        zIndex: 100,
+        gap: '40px'
       }}>
         {/* Logo/Brand */}
-        <div style={{
-          padding: '24px 20px',
-          borderBottom: '1px solid rgba(255,255,255,0.1)'
+        <Link href="/admin" style={{
+          textDecoration: 'none'
         }}>
           <h1 style={{
             color: '#667eea',
-            fontSize: '22px',
+            fontSize: '24px',
             fontWeight: 'bold',
             margin: 0,
             letterSpacing: '-0.5px'
@@ -60,18 +60,19 @@ export default function AdminNav() {
           </h1>
           <p style={{
             color: 'rgba(255,255,255,0.5)',
-            fontSize: '12px',
-            margin: '4px 0 0 0'
+            fontSize: '11px',
+            margin: '2px 0 0 0'
           }}>
-            Admin Panel
+            Admin
           </p>
-        </div>
+        </Link>
 
-        {/* Navigation Links */}
+        {/* Navigation Links - Horizontal */}
         <nav style={{
-          flex: 1,
-          padding: '16px 12px',
-          overflowY: 'auto'
+          display: 'flex',
+          gap: '8px',
+          alignItems: 'center',
+          flex: 1
         }}>
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -85,78 +86,31 @@ export default function AdminNav() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
-                  padding: '12px 16px',
-                  borderRadius: '10px',
-                  marginBottom: '4px',
+                  gap: '8px',
+                  padding: '10px 16px',
+                  borderRadius: '8px',
                   textDecoration: 'none',
                   color: isActive ? '#667eea' : 'rgba(255,255,255,0.7)',
-                  backgroundColor: isActive ? 'rgba(102, 126, 234, 0.1)' : 'transparent',
+                  backgroundColor: isActive ? 'rgba(102, 126, 234, 0.15)' : 'transparent',
                   fontWeight: isActive ? '600' : '400',
                   fontSize: '14px',
                   transition: 'all 0.2s ease',
-                  border: isActive ? '1px solid rgba(102, 126, 234, 0.3)' : '1px solid transparent'
+                  border: isActive ? '1px solid rgba(102, 126, 234, 0.4)' : '1px solid transparent',
+                  whiteSpace: 'nowrap'
                 }}
               >
-                <Icon size={20} />
-                <span style={{ flex: 1 }}>{item.name}</span>
-                {isActive && <ChevronRight size={16} />}
+                <Icon size={18} />
+                {item.name}
               </Link>
             );
           })}
         </nav>
-
-        {/* Bottom Section */}
-        <div style={{
-          padding: '16px 20px',
-          borderTop: '1px solid rgba(255,255,255,0.1)'
-        }}>
-          <p style={{
-            color: 'rgba(255,255,255,0.4)',
-            fontSize: '11px',
-            margin: 0
-          }}>
-            © 2025 GlowUp3
-          </p>
-        </div>
       </div>
 
-      {/* WRAPPER for page content - ensures content starts AFTER sidebar */}
+      {/* SPACER - Push content below the fixed header */}
       <div style={{
-        marginLeft: '260px',
-        minHeight: '100vh',
-        backgroundColor: '#050508'
-      }}>
-        {/* Top Header Bar */}
-        <div style={{
-          height: '60px',
-          backgroundColor: '#0a0a0f',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 24px',
-          position: 'sticky',
-          top: 0,
-          zIndex: 50
-        }}>
-          <h2 style={{
-            color: 'white',
-            fontSize: '18px',
-            fontWeight: '500',
-            margin: 0
-          }}>
-            {navItems.find(item => pathname === item.href || 
-              (item.href !== '/admin' && pathname.startsWith(item.href)))?.name || 'Dashboard'}
-          </h2>
-        </div>
-        
-        {/* Page Content */}
-        <div style={{
-          padding: '24px'
-        }}>
-          {/* Pages render their content here as children */}
-        </div>
-      </div>
+        height: '70px'
+      }} />
     </>
   );
 }
