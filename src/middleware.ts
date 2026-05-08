@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Admin dashboard public paths (no session required)
-const ADMIN_PUBLIC_PATHS = [
+// Public paths that bypass auth
+const PUBLIC_PATHS = [
   '/login/admin',
   '/login/admin/verify',
   '/api/admin/auth/initiate',
   '/api/admin/auth/verify',
+  '/_next',
+  '/favicon.svg',
 ];
 
 export function middleware(request: NextRequest) {
@@ -15,7 +17,7 @@ export function middleware(request: NextRequest) {
   // ADMIN DASHBOARD: Check session for admin routes
   if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
     // Allow public admin auth paths
-    if (ADMIN_PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
+    if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
       return NextResponse.next();
     }
     
@@ -30,8 +32,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // DEVELOPMENT AUTH: Basic Auth for all other routes
+  // DEVELOPMENT AUTH: Basic Auth for all other routes (except public paths)
   if (process.env.NODE_ENV === 'development') {
+    // Skip auth for public paths
+    if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
+      return NextResponse.next();
+    }
+    
     const authHeader = request.headers.get('authorization');
     
     if (authHeader) {
