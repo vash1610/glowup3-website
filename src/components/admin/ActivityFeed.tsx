@@ -22,79 +22,6 @@ interface ActivityFeedProps {
   activities?: ActivityItem[];
 }
 
-const generateMockActivities = (): ActivityItem[] => [
-  {
-    id: '1',
-    type: 'appointment',
-    title: 'New appointment booked',
-    description: 'Klára Svobodová booked with Zuzana Králová',
-    timestamp: '5 minutes ago'
-  },
-  {
-    id: '2',
-    type: 'user',
-    title: 'New professional registered',
-    description: 'Markéta Novotná joined as hair stylist',
-    timestamp: '23 minutes ago'
-  },
-  {
-    id: '3',
-    type: 'payment',
-    title: 'Payment received',
-    description: '3,500 CZK from Jana Dvořáková',
-    timestamp: '1 hour ago'
-  },
-  {
-    id: '4',
-    type: 'complete',
-    title: 'Appointment completed',
-    description: 'Eva Procházková - manicure session',
-    timestamp: '2 hours ago'
-  },
-  {
-    id: '5',
-    type: 'message',
-    title: 'New review received',
-    description: '5-star review from Petr Novák',
-    timestamp: '3 hours ago'
-  },
-  {
-    id: '6',
-    type: 'appointment',
-    title: 'Appointment rescheduled',
-    description: 'Marie Horáková moved to next week',
-    timestamp: '4 hours ago'
-  },
-  {
-    id: '7',
-    type: 'user',
-    title: 'New customer registered',
-    description: 'Lenka Veselá created an account',
-    timestamp: '5 hours ago'
-  },
-  {
-    id: '8',
-    type: 'alert',
-    title: 'Low availability warning',
-    description: '3 professionals have no available slots',
-    timestamp: '6 hours ago'
-  },
-  {
-    id: '9',
-    type: 'payment',
-    title: 'Subscription renewed',
-    description: 'Premium plan renewed for 1 year',
-    timestamp: '7 hours ago'
-  },
-  {
-    id: '10',
-    type: 'complete',
-    title: 'Service completed',
-    description: 'Hair coloring - Petra Kratochvílová',
-    timestamp: '8 hours ago'
-  }
-];
-
 const getIconForType = (type: ActivityItem['type']) => {
   switch (type) {
     case 'appointment':
@@ -134,7 +61,7 @@ const getBgColorForType = (type: ActivityItem['type']) => {
 };
 
 export default function ActivityFeed({ activities }: ActivityFeedProps) {
-  const activityList = activities || generateMockActivities();
+  const activityList = activities || [];
 
   return (
     <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-6">
@@ -142,7 +69,10 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
         <h3 className="text-lg font-semibold text-white mb-1">Recent Activity</h3>
         <p className="text-sm text-white/50">Latest events and updates</p>
       </div>
-      
+
+      {activityList.length === 0 ? (
+        <p className="text-center py-8 text-white/40 text-sm">No recent activity</p>
+      ) : (
       <div className="space-y-4">
         {activityList.slice(0, 10).map((activity) => (
           <div 
@@ -166,6 +96,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

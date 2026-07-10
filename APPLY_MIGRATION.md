@@ -262,3 +262,135 @@ ORDER BY table_name;
 
 ## Need Help?
 If you have issues, go to https://app.supabase.com/project/ydnmhnutaitmbeybpwxc/database/tables and create tables manually via the GUI.
+
+---
+
+## 🔧 Fix: Ticket Reply System Messages
+
+If you can't reply to tickets, run this SQL to fix the constraint:
+
+```sql
+ALTER TABLE ticket_messages DROP CONSTRAINT IF EXISTS ticket_messages_sender_type_check;
+ALTER TABLE ticket_messages ADD CONSTRAINT ticket_messages_sender_type_check 
+  CHECK (sender_type IN ('customer', 'admin', 'system'));
+```
+
+---
+
+## 🔒 Business Verification System Tables
+
+Run this SQL in Supabase SQL Editor to create business verification tables:
+
+```sql
+-- 1. Business Verifications Table
+CREATE TABLE IF NOT EXISTS business_verifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  request_id VARCHAR(100),
+  declared_ico VARCHAR(20),
+  declared_vat VARCHAR(50),
+  declared_trade_license_number VARCHAR(100),
+  declared_company_name VARCHAR(255),
+  ico VARCHAR(20),
+  company_name VARCHAR(255),
+  legal_form VARCHAR(100),
+  address TEXT,
+  registration_date DATE,
+  trade_license_number VARCHAR(100),
+  trade_license_scope JSONB,
+  trade_license_issue_date DATE,
+  trade_license_status VARCHAR(20),
+  vat_valid BOOLEAN,
+  vat_country VARCHAR(10),
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  reasons TEXT[],
+  confidence_score DECIMAL(5,4),
+  ares_response JSONB,
+  rzp_response JSONB,
+  vies_response JSONB,
+  ocr_extracted JSONB,
+  document_hashes JSONB DEFAULT '[]',
+  consent_timestamp TIMESTAMPTZ,
+  requested_at TIMESTAMPTZ DEFAULT NOW(),
+  completed_at TIMESTAMPTZ,
+  last_search_at TIMESTAMPTZ,
+  search_count INTEGER DEFAULT 1,
+  manual_reviewer_id UUID,
+  notes TEXT,
+  source VARCHAR(20) DEFAULT 'automatic',
+  verification_type VARCHAR(50),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_bv_ico ON business_verifications(ico);
+CREATE INDEX IF NOT EXISTS idx_bv_declared_ico ON business_verifications(declared_ico);
+CREATE INDEX IF NOT EXISTS idx_bv_status ON business_verifications(status);
+CREATE INDEX IF NOT EXISTS idx_bv_last_search ON business_verifications(last_search_at DESC);
+
+-- 2. Verification Audit Logs
+CREATE TABLE IF NOT EXISTS verification_audit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  verification_id UUID REFERENCES business_verifications(id) ON DELETE CASCADE,
+  event_type VARCHAR(50) NOT NULL,
+  actor_type VARCHAR(20) DEFAULT 'system',
+  actor_id UUID,
+  action VARCHAR(100),
+  previous_status VARCHAR(20),
+  new_status VARCHAR(20),
+  payload JSONB,
+  changes JSONB,
+  ip_address VARCHAR(45),
+  user_agent TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_verification_id ON verification_audit_logs(verification_id);
+CREATE INDEX IF NOT EXISTS idx_audit_created_at ON verification_audit_logs(created_at DESC);
+
+-- 3. Verification Cache
+CREATE TABLE IF NOT EXISTS verification_cache (
+  key VARCHAR(255) PRIMARY KEY,
+  value JSONB NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  source VARCHAR(20) NOT NULL,
+  hit_count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_cache_expires ON verification_cache(expires_at) WHERE expires_at > NOW();
+
+-- 4. Verification Templates
+CREATE TABLE IF NOT EXISTS verification_templates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_type VARCHAR(50) NOT NULL,
+  language VARCHAR(10) DEFAULT 'cs',
+  subject VARCHAR(255) NOT NULL,
+  body TEXT NOT NULL,
+  variables JSONB,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO verification_templates (template_type, language, subject, body) VALUES
+('request_docs', 'en', 'Business verification documents needed', 'Dear {{name}}, We couldn''t confirm your trade license. Please upload a clear scan of your živnostenský list. Best regards, GlowUp3 Team'),
+('rejected', 'en', 'Business verification unsuccessful', 'Dear {{name}}, We could not verify your business registration. Please contact support. Best regards, GlowUp3 Team'),
+('verified', 'en', 'Business verification complete', 'Dear {{name}}, Your company {{company_name}} (IČO: {{ico}}) is now verified. Best regards, GlowUp3 Team')
+ON CONFLICT DO NOTHING;
+
+-- Disable RLS for admin operations
+ALTER TABLE business_verifications DISABLE ROW LEVEL SECURITY;
+ALTER TABLE verification_audit_logs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE verification_cache DISABLE ROW LEVEL SECURITY;
+ALTER TABLE verification_templates DISABLE ROW LEVEL SECURITY;
+```
+
+After running, verify with:
+```sql
+SELECT table_name FROM information_schema.tables 
+WHERE table_schema = 'public' 
+AND table_name IN ('business_verifications', 'verification_audit_logs', 'verification_cache', 'verification_templates')
+ORDER BY table_name;
+```
+

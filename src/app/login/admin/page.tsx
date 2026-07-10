@@ -9,16 +9,13 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [debug, setDebug] = useState('');
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    setDebug('Starting login...');
     setIsLoading(true);
 
     try {
-      setDebug('Sending request...');
       const response = await fetch('/api/admin/auth/initiate', {
         method: 'POST',
         headers: {
@@ -27,9 +24,7 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      setDebug('Response received: ' + response.status);
       const data = await response.json();
-      setDebug('Data: ' + JSON.stringify(data));
 
       if (!response.ok) {
         setError(data.error || 'Login failed');
@@ -38,23 +33,14 @@ export default function AdminLoginPage() {
       }
 
       if (data.success) {
-        setDebug('Success! Setting cookie and redirecting...');
-        
-        // Set the cookie for middleware authentication
-        document.cookie = `admin_session=${data.token}; path=/; max-age=${24*60*60}; samesite=strict`;
-        
-        // Also keep in localStorage for client-side checks
-        localStorage.setItem('admin_token', data.token);
-        localStorage.setItem('admin_email', data.admin.email);
-        localStorage.setItem('admin_role', data.admin.role);
-        
-        // Redirect
-        window.location.href = '/admin';
+        // The session cookie is only ever set server-side after MFA succeeds.
+        // Store the email so the verify step knows who's completing 2FA.
+        sessionStorage.setItem('pending_admin_email', email);
+        router.push('/login/admin/verify');
       }
     } catch (err) {
       console.error('Login error:', err);
       setError('An unexpected error occurred. Please try again.');
-      setDebug('Error: ' + err);
     } finally {
       setIsLoading(false);
     }
@@ -156,13 +142,6 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
-            {/* Debug Info */}
-            {debug && (
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3">
-                <p className="text-xs text-blue-400 font-mono">{debug}</p>
-              </div>
-            )}
-
             {/* Error Message */}
             {error && (
               <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
@@ -239,7 +218,7 @@ export default function AdminLoginPage() {
         {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-sm text-slate-500">
-            &copy; {new Date().getFullYear()} GlowUp3. All rights reserved.
+            &copy; {new Date().getFullYear()} Todayly. All rights reserved.
           </p>
         </div>
       </div>

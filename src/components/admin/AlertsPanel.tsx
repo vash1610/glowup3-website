@@ -16,49 +16,6 @@ interface AlertsPanelProps {
   alerts?: Alert[];
 }
 
-const generateMockAlerts = (): Alert[] => [
-  {
-    id: '1',
-    type: 'payment',
-    title: 'Failed payment',
-    description: 'Payment failed for appointment #1234 - insufficient funds',
-    severity: 'high',
-    timestamp: '10 minutes ago'
-  },
-  {
-    id: '2',
-    type: 'user',
-    title: 'Flagged account',
-    description: 'Multiple failed login attempts detected',
-    severity: 'medium',
-    timestamp: '25 minutes ago'
-  },
-  {
-    id: '3',
-    type: 'system',
-    title: 'API rate limit',
-    description: 'External API approaching rate limit (80%)',
-    severity: 'low',
-    timestamp: '1 hour ago'
-  },
-  {
-    id: '4',
-    type: 'payment',
-    title: 'Pending refund',
-    description: 'Refund request pending for 3+ days',
-    severity: 'medium',
-    timestamp: '2 hours ago'
-  },
-  {
-    id: '5',
-    type: 'user',
-    title: 'Suspicious activity',
-    description: 'Unusual booking pattern detected',
-    severity: 'high',
-    timestamp: '3 hours ago'
-  }
-];
-
 const getIconForType = (type: Alert['type']) => {
   switch (type) {
     case 'payment':
@@ -119,7 +76,7 @@ const getTypeIconColor = (type: Alert['type']) => {
 };
 
 export default function AlertsPanel({ alerts }: AlertsPanelProps) {
-  const alertList = alerts || generateMockAlerts();
+  const alertList = alerts || [];
 
   return (
     <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-6">

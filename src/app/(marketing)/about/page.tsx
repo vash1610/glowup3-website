@@ -12,7 +12,7 @@ const team = [
 ];
 
 const milestones = [
-  { year: '2023', event: 'GlowUp3 founded in Prague, Czech Republic' },
+  { year: '2023', event: 'Todayly founded in Prague, Czech Republic' },
   { year: '2024', event: 'Launched MVP with 100 professionals onboarded' },
   { year: '2024', event: 'Reached 10,000 bookings milestone' },
   { year: '2025', event: 'Raised $2M seed funding from top investors' },
@@ -35,10 +35,10 @@ export default function AboutPage() {
       <section className={styles.hero}>
         <div className={styles.container}>
           <Link href="/" className={styles.backLink}>← Back to Home</Link>
-          <h1 className={styles.title}>About GlowUp3</h1>
+          <h1 className={styles.title}>About Todayly</h1>
           <p className={styles.subtitle}>
             We're on a mission to make beauty and wellness services accessible to everyone. 
-            Founded in 2023, GlowUp3 connects customers with top-rated professionals in salons, 
+            Founded in 2023, Todayly connects customers with top-rated professionals in salons, 
             spas, and fitness studios across Europe.
           </p>
         </div>

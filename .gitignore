@@ -5,3 +5,6 @@ node_modules/
 build
 .DS_Store
 .next
+supabase/.temp/
+supabase/supabase/
+tsconfig.tsbuildinfo

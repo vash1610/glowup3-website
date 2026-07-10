@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
+import { getTableColumns, BLOCKED_TABLES } from '@/lib/db-schema';
 
 function createAdminClient() {
   const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://ydnmhnutaitmbeybpwxc.supabase.co';
@@ -15,40 +16,13 @@ function createAdminClient() {
   });
 }
 
-async function verifyAdminSession(): Promise<{ valid: boolean; userId?: string; error?: string }> {
-  try {
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get('admin_session')?.value;
-    
-    if (!sessionToken) {
-      return { valid: false, error: 'No session token' };
-    }
-    
-    const session = JSON.parse(Buffer.from(sessionToken, 'base64').toString());
-    
-    if (!session.userId || !session.isAdmin || session.exp < Date.now()) {
-      return { valid: false, error: 'Invalid or expired session' };
-    }
-    
-    return { valid: true, userId: session.userId };
-  } catch {
-    return { valid: false, error: 'Invalid session format' };
-  }
-}
-
 async function logAdminAction(adminId: string, action: string, details: Record<string, unknown>) {
   console.log(`[ADMIN AUDIT] ${new Date().toISOString()} | Admin: ${adminId} | Action: ${action} | Details:`, details);
 }
 
-const ALLOWED_TABLES = [
-  'users', 'customers', 'professionals', 'appointments', 
-  'reviews', 'services', 'transactions', 'support_tickets',
-  'user_flags', 'user_reports', 'error_logs'
-];
-
 function isTableAllowed(tableName: string): boolean {
   const validPattern = /^[a-zA-Z_][a-zA-Z0-9_]{0,49}$/;
-  return validPattern.test(tableName) && ALLOWED_TABLES.includes(tableName);
+  return validPattern.test(tableName) && !BLOCKED_TABLES.has(tableName);
 }
 
 export async function GET(
@@ -56,7 +30,7 @@ export async function GET(
   { params }: { params: Promise<{ name: string }> }
 ) {
   try {
-    const session = await verifyAdminSession();
+    const session = await requireAdminSession();
     if (!session.valid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -107,8 +81,11 @@ export async function GET(
 
     await logAdminAction(session.userId!, 'QUERY_TABLE', { table: name, filters, page, limit });
 
+    const columns = await getTableColumns(name).catch(() => []);
+
     return NextResponse.json({
       data,
+      columns,
       pagination: {
         page,
         limit,
@@ -127,7 +104,7 @@ export async function POST(
   { params }: { params: Promise<{ name: string }> }
 ) {
   try {
-    const session = await verifyAdminSession();
+    const session = await requireAdminSession();
     if (!session.valid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -166,7 +143,7 @@ export async function PATCH(
   { params }: { params: Promise<{ name: string }> }
 ) {
   try {
-    const session = await verifyAdminSession();
+    const session = await requireAdminSession();
     if (!session.valid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -212,7 +189,7 @@ export async function DELETE(
   { params }: { params: Promise<{ name: string }> }
 ) {
   try {
-    const session = await verifyAdminSession();
+    const session = await requireAdminSession();
     if (!session.valid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

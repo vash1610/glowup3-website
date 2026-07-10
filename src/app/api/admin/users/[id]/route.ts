@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 
 function createAdminClient() {
   const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://ydnmhnutaitmbeybpwxc.supabase.co';
@@ -15,27 +15,6 @@ function createAdminClient() {
   });
 }
 
-async function verifyAdminSession(): Promise<{ valid: boolean; userId?: string; error?: string }> {
-  try {
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get('admin_session')?.value;
-    
-    if (!sessionToken) {
-      return { valid: false, error: 'No session token' };
-    }
-    
-    const session = JSON.parse(Buffer.from(sessionToken, 'base64').toString());
-    
-    if (!session.userId || !session.isAdmin || session.exp < Date.now()) {
-      return { valid: false, error: 'Invalid or expired session' };
-    }
-    
-    return { valid: true, userId: session.userId };
-  } catch {
-    return { valid: false, error: 'Invalid session format' };
-  }
-}
-
 async function logAdminAction(adminId: string, action: string, details: Record<string, unknown>) {
   console.log(`[ADMIN AUDIT] ${new Date().toISOString()} | Admin: ${adminId} | Action: ${action} | Details:`, details);
 }
@@ -45,7 +24,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await verifyAdminSession();
+    const session = await requireAdminSession();
     if (!session.valid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

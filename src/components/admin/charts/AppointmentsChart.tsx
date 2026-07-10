@@ -20,22 +20,8 @@ interface AppointmentsChartProps {
   }>;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: '#f59e0b',
-  confirmed: '#3b82f6',
-  completed: '#10b981',
-  cancelled: '#ef4444'
-};
-
-const generateMockData = () => [
-  { status: 'Pending', count: 12, color: STATUS_COLORS.pending },
-  { status: 'Confirmed', count: 24, color: STATUS_COLORS.confirmed },
-  { status: 'Completed', count: 89, color: STATUS_COLORS.completed },
-  { status: 'Cancelled', count: 5, color: STATUS_COLORS.cancelled }
-];
-
 export default function AppointmentsChart({ data }: AppointmentsChartProps) {
-  const chartData = data || generateMockData();
+  const chartData = data || [];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -59,7 +45,7 @@ export default function AppointmentsChart({ data }: AppointmentsChartProps) {
       </div>
       
       <div className="h-72">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer minWidth={0} minHeight={0} width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
             <XAxis 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 
 function createAdminClient() {
   const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://ydnmhnutaitmbeybpwxc.supabase.co';
@@ -15,34 +15,13 @@ function createAdminClient() {
   });
 }
 
-async function verifyAdminSession(): Promise<{ valid: boolean; userId?: string; error?: string }> {
-  try {
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get('admin_session')?.value;
-    
-    if (!sessionToken) {
-      return { valid: false, error: 'No session token' };
-    }
-    
-    const session = JSON.parse(Buffer.from(sessionToken, 'base64').toString());
-    
-    if (!session.userId || !session.isAdmin || session.exp < Date.now()) {
-      return { valid: false, error: 'Invalid or expired session' };
-    }
-    
-    return { valid: true, userId: session.userId };
-  } catch {
-    return { valid: false, error: 'Invalid session format' };
-  }
-}
-
 async function logAdminAction(adminId: string, action: string, details: Record<string, unknown>) {
   console.log(`[ADMIN AUDIT] ${new Date().toISOString()} | Admin: ${adminId} | Action: ${action} | Details:`, details);
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await verifyAdminSession();
+    const session = await requireAdminSession();
     if (!session.valid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -52,8 +31,8 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
     const offset = (page - 1) * limit;
     
-    const level = searchParams.get('level'); // 'error', 'warning', 'info'
-    const source = searchParams.get('source'); // 'api', 'app', 'database'
+    const priority = searchParams.get('priority'); // error_logs.error_priority
+    const category = searchParams.get('category'); // error_logs.category
     const userId = searchParams.get('user_id');
     const dateFrom = searchParams.get('date_from');
     const dateTo = searchParams.get('date_to');
@@ -67,14 +46,14 @@ export async function GET(request: NextRequest) {
       .select('*', { count: 'exact' });
 
     // Apply filters
-    if (level) {
-      query = query.eq('level', level);
+    if (priority) {
+      query = query.eq('error_priority', priority);
     }
-    
-    if (source) {
-      query = query.eq('source', source);
+
+    if (category) {
+      query = query.eq('category', category);
     }
-    
+
     if (userId) {
       query = query.eq('user_id', userId);
     }
@@ -101,25 +80,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch logs' }, { status: 500 });
     }
 
-    // Get counts by level for stats
+    // Get counts by priority for stats
     const { data: statsData } = await supabase
       .from('error_logs')
-      .select('level');
+      .select('error_priority');
 
     const stats = {
-      error: 0,
-      warning: 0,
-      info: 0,
+      critical: 0,
+      high: 0,
+      medium: 0,
+      low: 0,
       total: statsData?.length || 0
     };
 
     statsData?.forEach((log: Record<string, string>) => {
-      if (log.level === 'error') stats.error++;
-      else if (log.level === 'warning') stats.warning++;
-      else if (log.level === 'info') stats.info++;
+      const p = log.error_priority as keyof typeof stats;
+      if (p && p in stats && p !== 'total') stats[p]++;
     });
 
-    await logAdminAction(session.userId!, 'LIST_LOGS', { level, source, page, limit });
+    await logAdminAction(session.userId!, 'LIST_LOGS', { priority, category, page, limit });
 
     return NextResponse.json({
       logs: data,

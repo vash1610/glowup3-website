@@ -1,21 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { validateSession } from '@/lib/auth-utils';
+import { NextResponse } from 'next/server';
+import { requireAdminSession } from '@/lib/admin-auth';
 
-export async function GET(request: NextRequest) {
-  const sessionToken = request.cookies.get('admin_session')?.value;
-  
-  if (!sessionToken) {
+export async function GET() {
+  const session = await requireAdminSession();
+
+  if (!session.valid) {
     return NextResponse.json({ authenticated: false });
   }
-  
-  const result = await validateSession(sessionToken);
-  
-  if (!result.valid) {
-    return NextResponse.json({ authenticated: false });
-  }
-  
+
   return NextResponse.json({
     authenticated: true,
-    email: result.email,
+    email: session.email,
   });
 }

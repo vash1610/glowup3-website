@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 
 function createAdminClient() {
   const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://ydnmhnutaitmbeybpwxc.supabase.co';
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   
   if (!serviceRoleKey) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured');
@@ -15,34 +15,13 @@ function createAdminClient() {
   });
 }
 
-async function verifyAdminSession(): Promise<{ valid: boolean; userId?: string; error?: string }> {
-  try {
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get('admin_session')?.value;
-    
-    if (!sessionToken) {
-      return { valid: false, error: 'No session token' };
-    }
-    
-    const session = JSON.parse(Buffer.from(sessionToken, 'base64').toString());
-    
-    if (!session.userId || !session.isAdmin || session.exp < Date.now()) {
-      return { valid: false, error: 'Invalid or expired session' };
-    }
-    
-    return { valid: true, userId: session.userId };
-  } catch {
-    return { valid: false, error: 'Invalid session format' };
-  }
-}
-
 async function logAdminAction(adminId: string, action: string, details: Record<string, unknown>) {
   console.log(`[ADMIN AUDIT] ${new Date().toISOString()} | Admin: ${adminId} | Action: ${action} | Details:`, details);
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await verifyAdminSession();
+    const session = await requireAdminSession();
     if (!session.valid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -53,20 +32,17 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
     
     const status = searchParams.get('status');
-    const reportType = searchParams.get('type');
-    const reportedUserId = searchParams.get('reported_user_id');
+    const reportType = searchParams.get('report_type');
+    const reportedId = searchParams.get('reported_id');
     const reporterId = searchParams.get('reporter_id');
+    const severity = searchParams.get('severity');
     const sortBy = searchParams.get('sortBy') || 'created_at';
     const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc';
 
     const supabase = createAdminClient();
     let query = supabase
       .from('user_reports')
-      .select(`
-        *,
-        reporter:customers!user_reports_reporter_id_fkey(id, full_name, email),
-        reported_user:customers!user_reports_reported_user_id_fkey(id, full_name, email)
-      `, { count: 'exact' });
+      .select('*', { count: 'exact' });
 
     if (status) {
       query = query.eq('status', status);
@@ -76,8 +52,12 @@ export async function GET(request: NextRequest) {
       query = query.eq('report_type', reportType);
     }
     
-    if (reportedUserId) {
-      query = query.eq('reported_user_id', reportedUserId);
+    if (severity) {
+      query = query.eq('severity', severity);
+    }
+    
+    if (reportedId) {
+      query = query.eq('reported_id', reportedId);
     }
     
     if (reporterId) {
@@ -93,10 +73,46 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch reports' }, { status: 500 });
     }
 
-    await logAdminAction(session.userId!, 'LIST_REPORTS', { status, reportType, page, limit });
+    // Fetch reporter and reported user info separately based on their roles
+    const reportsWithUsers = await Promise.all(
+      (data || []).map(async (report) => {
+        let reporterInfo = null;
+        let reportedInfo = null;
+
+        // Fetch reporter info based on reporter_role
+        if (report.reporter_id) {
+          const reporterTable = report.reporter_role === 'professional' ? 'professionals' : 'customers';
+          const { data: reporter } = await supabase
+            .from(reporterTable)
+            .select('id, full_name, email')
+            .eq('id', report.reporter_id)
+            .single();
+          reporterInfo = reporter;
+        }
+
+        // Fetch reported user info based on reported_role
+        if (report.reported_id) {
+          const reportedTable = report.reported_role === 'professional' ? 'professionals' : 'customers';
+          const { data: reported } = await supabase
+            .from(reportedTable)
+            .select('id, full_name, email')
+            .eq('id', report.reported_id)
+            .single();
+          reportedInfo = reported;
+        }
+
+        return {
+          ...report,
+          reporter: reporterInfo,
+          reported_user: reportedInfo
+        };
+      })
+    );
+
+    await logAdminAction(session.userId!, 'LIST_REPORTS', { status, reportType, severity, page, limit });
 
     return NextResponse.json({
-      reports: data,
+      reports: reportsWithUsers,
       pagination: {
         page,
         limit,
@@ -112,28 +128,75 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await verifyAdminSession();
+    const session = await requireAdminSession();
     if (!session.valid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { reporter_id, reporter_type, reported_user_id, report_type, reason, description, evidence } = body;
+    const { 
+      reporter_id, 
+      reporter_role, 
+      reported_id, 
+      reported_role, 
+      report_type, 
+      severity, 
+      description,
+      evidence 
+    } = body;
 
-    if (!reporter_id || !reported_user_id || !report_type || !reason) {
+    // Validate required fields based on new schema
+    if (!reporter_id || !reported_id || !report_type || !description) {
       return NextResponse.json({ 
-        error: 'Reporter ID, reported user ID, report type, and reason are required' 
+        error: 'Reporter ID, reported ID, report type, and description are required' 
       }, { status: 400 });
     }
 
-    const validTypes = ['user', 'content', 'behavior', 'spam', 'harassment', 'inappropriate'];
-    if (!validTypes.includes(report_type)) {
-      return NextResponse.json({ error: 'Invalid report type' }, { status: 400 });
+    // Validate report_type against allowed values
+    const validReportTypes = [
+      'no_show', 
+      'rude_behavior', 
+      'suspicious_activity', 
+      'service_not_as_described', 
+      'payment_dispute', 
+      'harassment', 
+      'fake_review', 
+      'cancellation_abuse', 
+      'other'
+    ];
+    if (!validReportTypes.includes(report_type)) {
+      return NextResponse.json({ 
+        error: `Invalid report type. Must be one of: ${validReportTypes.join(', ')}` 
+      }, { status: 400 });
+    }
+
+    // Validate severity if provided
+    const validSeverities = ['low', 'medium', 'high', 'critical'];
+    if (severity && !validSeverities.includes(severity)) {
+      return NextResponse.json({ 
+        error: `Invalid severity. Must be one of: ${validSeverities.join(', ')}` 
+      }, { status: 400 });
+    }
+
+    // Validate reporter role if provided
+    const validRoles = ['customer', 'professional'];
+    if (reporter_role && !validRoles.includes(reporter_role)) {
+      return NextResponse.json({ 
+        error: `Invalid reporter role. Must be one of: ${validRoles.join(', ')}` 
+      }, { status: 400 });
+    }
+
+    // Validate reported role if provided
+    if (reported_role && !validRoles.includes(reported_role)) {
+      return NextResponse.json({ 
+        error: `Invalid reported role. Must be one of: ${validRoles.join(', ')}` 
+      }, { status: 400 });
     }
 
     const supabase = createAdminClient();
 
-    const reporterTable = reporter_type === 'professional' ? 'professionals' : 'customers';
+    // Verify reporter exists in the appropriate table
+    const reporterTable = reporter_role === 'professional' ? 'professionals' : 'customers';
     const { error: reporterError } = await supabase
       .from(reporterTable)
       .select('id')
@@ -144,30 +207,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Reporter not found' }, { status: 404 });
     }
 
-    const reportedTable = reporter_type === 'professional' ? 'professionals' : 'customers';
+    // Verify reported user exists in the appropriate table
+    const reportedTable = reported_role === 'professional' ? 'professionals' : 'customers';
     const { error: reportedError } = await supabase
       .from(reportedTable)
       .select('id')
-      .eq('id', reported_user_id)
+      .eq('id', reported_id)
       .single();
 
     if (reportedError) {
       return NextResponse.json({ error: 'Reported user not found' }, { status: 404 });
     }
 
+    // Create the report with new schema
     const { data: report, error: reportError } = await supabase
       .from('user_reports')
       .insert({
         reporter_id,
-        reporter_type: reporter_type || 'customer',
-        reported_user_id,
+        reporter_role: reporter_role || 'customer',
+        reported_id,
+        reported_role: reported_role || 'customer',
         report_type,
-        reason,
+        severity: severity || 'medium',
         description,
         evidence,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        status: 'pending'
       })
       .select()
       .single();
@@ -180,8 +244,9 @@ export async function POST(request: NextRequest) {
     await logAdminAction(session.userId!, 'CREATE_REPORT', { 
       reportId: report.id, 
       reporterId: reporter_id, 
-      reportedUserId: reported_user_id,
-      reportType: report_type 
+      reportedId: reported_id,
+      reportType: report_type,
+      severity: severity || 'medium'
     });
 
     return NextResponse.json({ report }, { status: 201 });

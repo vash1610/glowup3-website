@@ -78,7 +78,7 @@ export default function Home() {
     {
       name: 'Martina K.',
       role: 'Hair Stylist',
-      text: 'GlowUp3 transformed my business. The Available Now feature brings me customers even during slow days.',
+      text: 'Todayly transformed my business. The Available Now feature brings me customers even during slow days.',
       rating: 5
     },
     {
@@ -109,7 +109,7 @@ export default function Home() {
         <div className={styles.navContent}>
           <div className={styles.logo}>
             <Icon name="sparkle" size={24} color="#667eea" />
-            <span>GlowUp3</span>
+            <span>Todayly</span>
           </div>
           <div className={styles.navLinks}>
           <a href="/pros">Browse Pros</a>
@@ -172,7 +172,7 @@ export default function Home() {
               <div className={styles.phoneScreen}>
                 <div className={styles.appHeader}>
                   <Icon name="sparkle" size={16} color="#667eea" />
-                  <span> GlowUp3</span>
+                  <span> Todayly</span>
                   <Icon name="profile" size={16} />
                 </div>
                 <div className={styles.appSearch}>
@@ -321,7 +321,7 @@ export default function Home() {
         <div className={styles.highlightContent}>
           <span className={styles.highlightBadge}><Icon name="lightning" size={14} color="#fbbf24" /> NOW FEATURE</span>
           <h2>Need Something Today?</h2>
-          <p>Our AI-powered "Available Now" feature finds professionals who are ready to see you right now. Can't wait? No problem — GlowUp3 has you covered.</p>
+          <p>Our AI-powered "Available Now" feature finds professionals who are ready to see you right now. Can't wait? No problem — Todayly has you covered.</p>
           <div className={styles.highlightFeatures}>
             <div className={styles.highlightFeature}>
               <Icon name="lightning" size={18} color="#fbbf24" />
@@ -381,7 +381,7 @@ export default function Home() {
         <div className={styles.ctaGlow} />
         <div className={styles.ctaContent}>
           <h2>Ready to Glow Up?</h2>
-          <p>Join 50,000+ users who trust GlowUp3 for their beauty needs. Download free today.</p>
+          <p>Join 50,000+ users who trust Todayly for their beauty needs. Download free today.</p>
           <div className={styles.ctaButtons}>
             <a href="https://apps.apple.com/app/glowup3/id123456789" className={styles.storeBtn}>
               <Icon name="apple" size={24} color="#fff" />
@@ -407,7 +407,7 @@ export default function Home() {
           <div className={styles.footerBrand}>
             <div className={styles.logo}>
               <Icon name="sparkle" size={24} color="#667eea" />
-              <span>GlowUp3</span>
+              <span>Todayly</span>
             </div>
             <p>The all-in-one beauty booking platform connecting you with top professionals.</p>
             <div className={styles.socialLinks}>
@@ -449,7 +449,7 @@ export default function Home() {
           </div>
         </div>
         <div className={styles.footerBottom}>
-          <p>© 2026 GlowUp3. All rights reserved. Made with <Icon name="heart" size={14} color="#f472b6" /> for the beauty community.</p>
+          <p>© 2026 Todayly. All rights reserved. Made with <Icon name="heart" size={14} color="#f472b6" /> for the beauty community.</p>
         </div>
       </footer>
     </main>

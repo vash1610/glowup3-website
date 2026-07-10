@@ -16,7 +16,7 @@ export default function TermsPage() {
         <div className={styles.container}>
           <div className={styles.prose}>
             <h2>1. Acceptance of Terms</h2>
-            <p>By using GlowUp3, you agree to these terms. If you do not agree, please do not use our services.</p>
+            <p>By using Todayly, you agree to these terms. If you do not agree, please do not use our services.</p>
             <h2>2. Bookings & Payments</h2>
             <p>All bookings are confirmed upon payment. Cancellations made more than 24 hours in advance are fully refundable. Late cancellations may incur a fee.</p>
             <h2>3. Professional Conduct</h2>
@@ -24,7 +24,7 @@ export default function TermsPage() {
             <h2>4. Wallet & Escrow</h2>
             <p>Payments are held in escrow until the service is completed. Funds are released to professionals 24 hours after service completion.</p>
             <h2>5. Limitation of Liability</h2>
-            <p>GlowUp3 acts as a platform connecting customers and professionals. We are not liable for the quality of services provided by professionals.</p>
+            <p>Todayly acts as a platform connecting customers and professionals. We are not liable for the quality of services provided by professionals.</p>
             <h2>6. Changes to Terms</h2>
             <p>We may update these terms at any time. Users will be notified of material changes via email.</p>
           </div>

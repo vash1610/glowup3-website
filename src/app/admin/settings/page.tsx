@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminNav from '@/components/admin/AdminNav';
 import {
   Settings as SettingsIcon,
   Shield,
   Bell,
   Palette,
-  Globe,
   Database,
   Save,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 
 type TabType = 'general' | 'security' | 'notifications' | 'appearance' | 'database';
@@ -29,61 +29,150 @@ const sections: SettingsSection[] = [
   { id: 'database', name: 'Database', icon: Database },
 ];
 
+interface AdminSettings {
+  id: string;
+  platform_name: string;
+  support_email: string;
+  timezone: string;
+  session_timeout_hours: number;
+  email_alerts: boolean;
+  slack_integration: boolean;
+  slack_webhook_url: string | null;
+  theme: string;
+  accent_color: string;
+}
+
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('general');
+  const [settings, setSettings] = useState<AdminSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // General settings
-  const [platformName, setPlatformName] = useState('GlowUp3');
-  const [supportEmail, setSupportEmail] = useState('support@glowup3.com');
-  const [timezone, setTimezone] = useState('Europe/Prague');
+  useEffect(() => {
+    fetchSettings();
+  }, []);
 
-  // Security settings
-  const [twoFactor, setTwoFactor] = useState(false);
-  const [sessionTimeout, setSessionTimeout] = useState('24h');
-  const [ipWhitelist, setIpWhitelist] = useState('');
+  const fetchSettings = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/settings');
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || 'Failed to load settings');
+        return;
+      }
+      setSettings(data.settings);
+    } catch (err) {
+      console.error('Error fetching settings:', err);
+      setError('Failed to load settings');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Notifications settings
-  const [emailAlerts, setEmailAlerts] = useState(true);
-  const [slackIntegration, setSlackIntegration] = useState(false);
-  const [slackWebhook, setSlackWebhook] = useState('');
+  const update = <K extends keyof AdminSettings>(field: K, value: AdminSettings[K]) => {
+    setSettings((prev) => (prev ? { ...prev, [field]: value } : prev));
+  };
 
-  // Appearance settings
-  const [theme, setTheme] = useState('dark');
-  const [accentColor, setAccentColor] = useState('#667eea');
+  const handleSave = async () => {
+    if (!settings) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform_name: settings.platform_name,
+          support_email: settings.support_email,
+          timezone: settings.timezone,
+          session_timeout_hours: settings.session_timeout_hours,
+          email_alerts: settings.email_alerts,
+          slack_integration: settings.slack_integration,
+          slack_webhook_url: settings.slack_webhook_url,
+          theme: settings.theme,
+          accent_color: settings.accent_color,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || 'Failed to save settings');
+        return;
+      }
+      setSettings(data.settings);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      setError('Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  const handleSave = () => {
-    // Simulate save
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  if (loading) {
+    return (
+      <>
+        <AdminNav />
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 text-white/40 animate-spin" />
+        </div>
+      </>
+    );
+  }
+
+  if (!settings) {
+    return (
+      <>
+        <AdminNav />
+        <div className="max-w-[1400px] mx-auto p-6">
+          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+            {error || 'Failed to load settings'}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '12px 16px',
+    borderRadius: '8px',
+    border: '1px solid rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    color: 'white',
+    fontSize: '14px',
+    outline: 'none'
+  };
+
+  const labelStyle: React.CSSProperties = {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: '14px',
+    marginBottom: '8px',
+    display: 'block'
   };
 
   return (
     <>
       <AdminNav />
-      
-      <div style={{
-        padding: '24px',
-        maxWidth: '900px'
-      }}>
-        <div style={{
-          marginBottom: '32px'
-        }}>
-          <h1 style={{
-            color: 'white',
-            fontSize: '28px',
-            fontWeight: 'bold',
-            margin: '0 0 8px 0'
-          }}>
+
+      <div className="max-w-[1400px] mx-auto p-6 space-y-6">
+        <div style={{ marginBottom: '32px' }}>
+          <h1 style={{ color: 'white', fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
             Settings
           </h1>
-          <p style={{
-            color: 'rgba(255,255,255,0.5)',
-            margin: 0
-          }}>
+          <p style={{ color: 'rgba(255,255,255,0.5)', margin: 0 }}>
             Manage your admin panel preferences and configurations
           </p>
         </div>
+
+        {error && (
+          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
 
         {/* Tabs */}
         <div style={{
@@ -136,66 +225,33 @@ export default function SettingsPage() {
               <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '600', margin: '0 0 20px 0' }}>
                 General Settings
               </h3>
-              
+
               <div>
-                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', marginBottom: '8px', display: 'block' }}>
-                  Platform Name
-                </label>
+                <label style={labelStyle}>Platform Name</label>
                 <input
                   type="text"
-                  value={platformName}
-                  onChange={(e) => setPlatformName(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    backgroundColor: 'rgba(0,0,0,0.3)',
-                    color: 'white',
-                    fontSize: '14px',
-                    outline: 'none'
-                  }}
+                  value={settings.platform_name}
+                  onChange={(e) => update('platform_name', e.target.value)}
+                  style={inputStyle}
                 />
               </div>
 
               <div>
-                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', marginBottom: '8px', display: 'block' }}>
-                  Support Email
-                </label>
+                <label style={labelStyle}>Support Email</label>
                 <input
                   type="email"
-                  value={supportEmail}
-                  onChange={(e) => setSupportEmail(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    backgroundColor: 'rgba(0,0,0,0.3)',
-                    color: 'white',
-                    fontSize: '14px',
-                    outline: 'none'
-                  }}
+                  value={settings.support_email}
+                  onChange={(e) => update('support_email', e.target.value)}
+                  style={inputStyle}
                 />
               </div>
 
               <div>
-                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', marginBottom: '8px', display: 'block' }}>
-                  Timezone
-                </label>
+                <label style={labelStyle}>Timezone</label>
                 <select
-                  value={timezone}
-                  onChange={(e) => setTimezone(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    backgroundColor: 'rgba(0,0,0,0.3)',
-                    color: 'white',
-                    fontSize: '14px',
-                    outline: 'none'
-                  }}
+                  value={settings.timezone}
+                  onChange={(e) => update('timezone', e.target.value)}
+                  style={inputStyle}
                 >
                   <option value="Europe/Prague">Europe/Prague (CEST)</option>
                   <option value="Europe/London">Europe/London (GMT)</option>
@@ -212,90 +268,26 @@ export default function SettingsPage() {
               <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '600', margin: '0 0 20px 0' }}>
                 Security Settings
               </h3>
-              
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '16px',
-                backgroundColor: 'rgba(0,0,0,0.2)',
-                borderRadius: '8px'
-              }}>
-                <div>
-                  <p style={{ color: 'white', fontWeight: '500', margin: '0 0 4px 0' }}>Two-Factor Authentication</p>
-                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', margin: 0 }}>Require 2FA for all admin users</p>
-                </div>
-                <button
-                  onClick={() => setTwoFactor(!twoFactor)}
-                  style={{
-                    width: '50px',
-                    height: '26px',
-                    borderRadius: '13px',
-                    border: 'none',
-                    backgroundColor: twoFactor ? '#10b981' : 'rgba(255,255,255,0.2)',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  <div style={{
-                    width: '22px',
-                    height: '22px',
-                    borderRadius: '50%',
-                    backgroundColor: 'white',
-                    position: 'absolute',
-                    top: '2px',
-                    left: twoFactor ? '26px' : '2px',
-                    transition: 'all 0.2s ease'
-                  }} />
-                </button>
+
+              <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                <p className="text-blue-400 text-sm">
+                  Two-factor email verification is always required to log in - it's not optional and can't be turned off here.
+                </p>
               </div>
 
               <div>
-                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', marginBottom: '8px', display: 'block' }}>
-                  Session Timeout
-                </label>
+                <label style={labelStyle}>Session Timeout (hours)</label>
                 <select
-                  value={sessionTimeout}
-                  onChange={(e) => setSessionTimeout(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    backgroundColor: 'rgba(0,0,0,0.3)',
-                    color: 'white',
-                    fontSize: '14px',
-                    outline: 'none'
-                  }}
+                  value={settings.session_timeout_hours}
+                  onChange={(e) => update('session_timeout_hours', parseInt(e.target.value))}
+                  style={inputStyle}
                 >
-                  <option value="1h">1 hour</option>
-                  <option value="8h">8 hours</option>
-                  <option value="24h">24 hours</option>
-                  <option value="7d">7 days</option>
+                  <option value={1}>1 hour</option>
+                  <option value={8}>8 hours</option>
+                  <option value={24}>24 hours</option>
+                  <option value={168}>7 days</option>
                 </select>
-              </div>
-
-              <div>
-                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', marginBottom: '8px', display: 'block' }}>
-                  IP Whitelist (comma separated)
-                </label>
-                <input
-                  type="text"
-                  value={ipWhitelist}
-                  onChange={(e) => setIpWhitelist(e.target.value)}
-                  placeholder="e.g., 192.168.1.1, 10.0.0.0/24"
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    backgroundColor: 'rgba(0,0,0,0.3)',
-                    color: 'white',
-                    fontSize: '14px',
-                    outline: 'none'
-                  }}
-                />
+                <p className="text-xs text-white/40 mt-2">Applies to new logins going forward, not sessions already in progress.</p>
               </div>
             </div>
           )}
@@ -306,7 +298,7 @@ export default function SettingsPage() {
               <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '600', margin: '0 0 20px 0' }}>
                 Notification Settings
               </h3>
-              
+
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -320,13 +312,13 @@ export default function SettingsPage() {
                   <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', margin: 0 }}>Receive alerts via email</p>
                 </div>
                 <button
-                  onClick={() => setEmailAlerts(!emailAlerts)}
+                  onClick={() => update('email_alerts', !settings.email_alerts)}
                   style={{
                     width: '50px',
                     height: '26px',
                     borderRadius: '13px',
                     border: 'none',
-                    backgroundColor: emailAlerts ? '#10b981' : 'rgba(255,255,255,0.2)',
+                    backgroundColor: settings.email_alerts ? '#10b981' : 'rgba(255,255,255,0.2)',
                     cursor: 'pointer',
                     position: 'relative'
                   }}
@@ -338,7 +330,7 @@ export default function SettingsPage() {
                     backgroundColor: 'white',
                     position: 'absolute',
                     top: '2px',
-                    left: emailAlerts ? '26px' : '2px'
+                    left: settings.email_alerts ? '26px' : '2px'
                   }} />
                 </button>
               </div>
@@ -356,13 +348,13 @@ export default function SettingsPage() {
                   <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', margin: 0 }}>Send notifications to Slack</p>
                 </div>
                 <button
-                  onClick={() => setSlackIntegration(!slackIntegration)}
+                  onClick={() => update('slack_integration', !settings.slack_integration)}
                   style={{
                     width: '50px',
                     height: '26px',
                     borderRadius: '13px',
                     border: 'none',
-                    backgroundColor: slackIntegration ? '#10b981' : 'rgba(255,255,255,0.2)',
+                    backgroundColor: settings.slack_integration ? '#10b981' : 'rgba(255,255,255,0.2)',
                     cursor: 'pointer',
                     position: 'relative'
                   }}
@@ -374,32 +366,24 @@ export default function SettingsPage() {
                     backgroundColor: 'white',
                     position: 'absolute',
                     top: '2px',
-                    left: slackIntegration ? '26px' : '2px'
+                    left: settings.slack_integration ? '26px' : '2px'
                   }} />
                 </button>
               </div>
 
-              {slackIntegration && (
+              {settings.slack_integration && (
                 <div>
-                  <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', marginBottom: '8px', display: 'block' }}>
-                    Slack Webhook URL
-                  </label>
+                  <label style={labelStyle}>Slack Webhook URL</label>
                   <input
                     type="url"
-                    value={slackWebhook}
-                    onChange={(e) => setSlackWebhook(e.target.value)}
+                    value={settings.slack_webhook_url || ''}
+                    onChange={(e) => update('slack_webhook_url', e.target.value)}
                     placeholder="https://hooks.slack.com/services/..."
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      backgroundColor: 'rgba(0,0,0,0.3)',
-                      color: 'white',
-                      fontSize: '14px',
-                      outline: 'none'
-                    }}
+                    style={inputStyle}
                   />
+                  <p className="text-xs text-yellow-400/80 mt-2">
+                    This URL is saved but no events are wired to send to it yet - that's a follow-up build, not this settings form.
+                  </p>
                 </div>
               )}
             </div>
@@ -411,21 +395,25 @@ export default function SettingsPage() {
               <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '600', margin: '0 0 20px 0' }}>
                 Appearance Settings
               </h3>
-              
+
+              <div className="p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+                <p className="text-yellow-400/80 text-xs">
+                  These preferences are saved but the dashboard's dark theme is currently fixed in the UI code - changing them here doesn't yet re-theme the app.
+                </p>
+              </div>
+
               <div>
-                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', marginBottom: '8px', display: 'block' }}>
-                  Theme
-                </label>
+                <label style={labelStyle}>Theme</label>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   {['dark', 'light', 'system'].map((t) => (
                     <button
                       key={t}
-                      onClick={() => setTheme(t)}
+                      onClick={() => update('theme', t)}
                       style={{
                         padding: '12px 24px',
                         borderRadius: '8px',
-                        border: theme === t ? '2px solid #667eea' : '2px solid rgba(255,255,255,0.1)',
-                        backgroundColor: theme === t ? 'rgba(102, 126, 234, 0.1)' : 'transparent',
+                        border: settings.theme === t ? '2px solid #667eea' : '2px solid rgba(255,255,255,0.1)',
+                        backgroundColor: settings.theme === t ? 'rgba(102, 126, 234, 0.1)' : 'transparent',
                         color: 'white',
                         cursor: 'pointer',
                         textTransform: 'capitalize'
@@ -438,35 +426,19 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', marginBottom: '8px', display: 'block' }}>
-                  Accent Color
-                </label>
+                <label style={labelStyle}>Accent Color</label>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                   <input
                     type="color"
-                    value={accentColor}
-                    onChange={(e) => setAccentColor(e.target.value)}
-                    style={{
-                      width: '50px',
-                      height: '50px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      cursor: 'pointer'
-                    }}
+                    value={settings.accent_color}
+                    onChange={(e) => update('accent_color', e.target.value)}
+                    style={{ width: '50px', height: '50px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}
                   />
                   <input
                     type="text"
-                    value={accentColor}
-                    onChange={(e) => setAccentColor(e.target.value)}
-                    style={{
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      backgroundColor: 'rgba(0,0,0,0.3)',
-                      color: 'white',
-                      fontSize: '14px',
-                      outline: 'none'
-                    }}
+                    value={settings.accent_color}
+                    onChange={(e) => update('accent_color', e.target.value)}
+                    style={{ ...inputStyle, width: 'auto' }}
                   />
                 </div>
               </div>
@@ -477,110 +449,72 @@ export default function SettingsPage() {
           {activeTab === 'database' && (
             <div className="space-y-6">
               <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '600', margin: '0 0 20px 0' }}>
-                Database Settings
+                Database
               </h3>
-              
+
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                 gap: '16px'
               }}>
-                <div style={{
-                  padding: '20px',
-                  backgroundColor: 'rgba(0,0,0,0.2)',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255,255,255,0.1)'
-                }}>
+                <div style={{ padding: '20px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
                   <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', margin: '0 0 8px 0' }}>Database</p>
-                  <p style={{ color: 'white', fontSize: '14px', margin: 0 }}>PostgreSQL</p>
+                  <p style={{ color: 'white', fontSize: '14px', margin: 0 }}>PostgreSQL (Supabase)</p>
                 </div>
-                <div style={{
-                  padding: '20px',
-                  backgroundColor: 'rgba(0,0,0,0.2)',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255,255,255,0.1)'
-                }}>
-                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', margin: '0 0 8px 0' }}>Region</p>
-                  <p style={{ color: 'white', fontSize: '14px', margin: 0 }}>eu-central-1</p>
+                <div style={{ padding: '20px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', margin: '0 0 8px 0' }}>Browse tables</p>
+                  <a href="/admin/database" style={{ color: '#a5b4fc', fontSize: '14px' }}>Open Database Viewer &rarr;</a>
                 </div>
-                <div style={{
-                  padding: '20px',
-                  backgroundColor: 'rgba(0,0,0,0.2)',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255,255,255,0.1)'
-                }}>
-                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', margin: '0 0 8px 0' }}>Status</p>
-                  <p style={{ color: '#10b981', fontSize: '14px', margin: 0 }}>● Connected</p>
-                </div>
-              </div>
-
-              <div style={{
-                padding: '16px',
-                backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                borderRadius: '8px',
-                border: '1px solid rgba(255, 193, 7, 0.3)'
-              }}>
-                <p style={{ color: '#ffc107', fontSize: '14px', margin: 0 }}>
-                  ⚠️ Database management features are coming soon. Contact support for database operations.
-                </p>
               </div>
             </div>
           )}
 
           {/* Save Button */}
-          <div style={{
-            marginTop: '32px',
-            paddingTop: '24px',
-            borderTop: '1px solid rgba(255,255,255,0.1)',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: '12px'
-          }}>
-            <button
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: '1px solid rgba(255,255,255,0.2)',
-                backgroundColor: 'transparent',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: saved ? '#10b981' : '#667eea',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                minWidth: '120px',
-                justifyContent: 'center'
-              }}
-            >
-              {saved ? (
-                <>
-                  <Check size={18} />
-                  Saved!
-                </>
-              ) : (
-                <>
-                  <Save size={18} />
-                  Save Changes
-                </>
-              )}
-            </button>
-          </div>
+          {activeTab !== 'database' && (
+            <div style={{
+              marginTop: '32px',
+              paddingTop: '24px',
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '12px'
+            }}>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: saved ? '#10b981' : '#667eea',
+                  color: 'white',
+                  cursor: saving ? 'default' : 'pointer',
+                  opacity: saving ? 0.7 : 1,
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  minWidth: '120px',
+                  justifyContent: 'center'
+                }}
+              >
+                {saving ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : saved ? (
+                  <>
+                    <Check size={18} />
+                    Saved!
+                  </>
+                ) : (
+                  <>
+                    <Save size={18} />
+                    Save Changes
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </>

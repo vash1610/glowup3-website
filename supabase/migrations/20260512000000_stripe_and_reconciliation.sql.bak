@@ -1,0 +1,196 @@
+-- GlowUp3 Stripe Integration & Reconciliation Tables
+-- Adds linking between users and Stripe, plus audit trail
+
+-- ============================================
+-- STRIPE_ACCOUNTS TABLE (Link users to Stripe)
+-- ============================================
+CREATE TABLE IF NOT EXISTS stripe_accounts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id TEXT NOT NULL,
+    user_type TEXT NOT NULL CHECK (user_type IN ('customer', 'professional')),
+    stripe_customer_id TEXT UNIQUE,
+    stripe_account_id TEXT UNIQUE, -- For professionals (Connect accounts)
+    stripe_email TEXT,
+    is_verified BOOLEAN DEFAULT FALSE,
+    verification_date TIMESTAMP WITH TIME ZONE,
+    default_payment_method_id TEXT,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_stripe_user ON stripe_accounts(user_id, user_type);
+CREATE INDEX IF NOT EXISTS idx_stripe_customer ON stripe_accounts(stripe_customer_id);
+CREATE INDEX IF NOT EXISTS idx_stripe_account ON stripe_accounts(stripe_account_id);
+
+-- ============================================
+-- RECONCILIATION_LOGS TABLE (Audit trail)
+-- ============================================
+CREATE TABLE IF NOT EXISTS reconciliation_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    reconciliation_date DATE NOT NULL,
+    reconciliation_type TEXT NOT NULL CHECK (reconciliation_type IN ('daily_balance', 'weekly_audit', 'manual', 'webhook', 'scheduled')),
+    
+    -- Balance comparisons (in CZK cents)
+    supabase_total BIGINT NOT NULL,
+    stripe_total BIGINT NOT NULL,
+    discrepancy_amount BIGINT DEFAULT 0,
+    
+    -- Transaction counts
+    supabase_transaction_count INTEGER DEFAULT 0,
+    stripe_transaction_count INTEGER DEFAULT 0,
+    count_discrepancy INTEGER DEFAULT 0,
+    
+    -- Status tracking
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'failed', 'alert_sent')),
+    severity TEXT DEFAULT 'info' CHECK (severity IN ('debug', 'info', 'warning', 'critical', 'fraud')),
+    
+    -- Detailed findings (JSON arrays)
+    findings JSONB DEFAULT '[]',
+    missing_transactions JSONB DEFAULT '[]', -- In Stripe but not Supabase
+    extra_transactions JSONB DEFAULT '[]',    -- In Supabase but not Stripe
+    discrepancy_transactions JSONB DEFAULT '[]', -- Amount mismatches
+    
+    -- Audit info
+    checked_by TEXT,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    completed_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_recon_date ON reconciliation_logs(reconciliation_date DESC);
+CREATE INDEX IF NOT EXISTS idx_recon_type ON reconciliation_logs(reconciliation_type);
+CREATE INDEX IF NOT EXISTS idx_recon_status ON reconciliation_logs(status);
+CREATE INDEX IF NOT EXISTS idx_recon_severity ON reconciliation_logs(severity);
+
+-- ============================================
+-- HELPER FUNCTIONS
+-- ============================================
+
+-- Function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_stripe_accounts_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Trigger for stripe_accounts
+CREATE TRIGGER update_stripe_accounts_updated_at
+    BEFORE UPDATE ON stripe_accounts
+    FOR EACH ROW
+    EXECUTE FUNCTION update_stripe_accounts_updated_at();
+
+-- Function to link user to Stripe customer
+CREATE OR REPLACE FUNCTION link_user_to_stripe(
+    p_user_id TEXT,
+    p_user_type TEXT,
+    p_stripe_customer_id TEXT,
+    p_stripe_email TEXT DEFAULT NULL
+)
+RETURNS UUID AS $$
+DECLARE
+    v_account_id UUID;
+BEGIN
+    INSERT INTO stripe_accounts (
+        user_id, user_type, stripe_customer_id, stripe_email, is_verified, verification_date
+    ) VALUES (
+        p_user_id, p_user_type, p_stripe_customer_id, p_stripe_email, TRUE, NOW()
+    )
+    ON CONFLICT (stripe_customer_id) DO UPDATE SET
+        user_id = p_user_id,
+        user_type = p_user_type,
+        stripe_email = COALESCE(p_stripe_email, stripe_accounts.stripe_email),
+        is_verified = TRUE,
+        verification_date = NOW(),
+        updated_at = NOW()
+    RETURNING id INTO v_account_id;
+    
+    RETURN v_account_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to create a reconciliation log entry
+CREATE OR REPLACE FUNCTION create_reconciliation_log(
+    p_reconciliation_type TEXT,
+    p_supabase_total BIGINT,
+    p_stripe_total BIGINT,
+    p_supabase_count INTEGER,
+    p_stripe_count INTEGER
+)
+RETURNS UUID AS $$
+DECLARE
+    v_log_id UUID;
+    v_discrepancy BIGINT;
+    v_count_diff INTEGER;
+    v_severity TEXT;
+BEGIN
+    v_discrepancy := ABS(p_supabase_total - p_stripe_total);
+    v_count_diff := ABS(p_supabase_count - p_stripe_count);
+    
+    -- Determine severity based on discrepancy
+    IF v_discrepancy = 0 AND v_count_diff = 0 THEN
+        v_severity := 'info';
+    ELSIF v_discrepancy < 10000 AND v_count_diff <= 2 THEN -- Less than 100 CZK discrepancy
+        v_severity := 'warning';
+    ELSIF v_discrepancy >= 10000 OR v_count_diff > 10 THEN -- More than 100 CZK or many transactions
+        v_severity := 'critical';
+    ELSE
+        v_severity := 'warning';
+    END IF;
+    
+    INSERT INTO reconciliation_logs (
+        reconciliation_date, reconciliation_type,
+        supabase_total, stripe_total, discrepancy_amount,
+        supabase_transaction_count, stripe_transaction_count, count_discrepancy,
+        status, severity
+    ) VALUES (
+        CURRENT_DATE, p_reconciliation_type,
+        p_supabase_total, p_stripe_total, v_discrepancy,
+        p_supabase_count, p_stripe_count, v_count_diff,
+        'completed', v_severity
+    )
+    RETURNING id INTO v_log_id;
+    
+    RETURN v_log_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================
+-- ROW LEVEL SECURITY (RLS)
+-- ============================================
+
+ALTER TABLE stripe_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reconciliation_logs ENABLE ROW LEVEL SECURITY;
+
+-- Admin can see all
+CREATE POLICY "Admin can view all stripe accounts" ON stripe_accounts FOR SELECT USING (
+    auth.jwt() ->> 'role' = 'admin'
+);
+
+CREATE POLICY "Admin can view reconciliation logs" ON reconciliation_logs FOR SELECT USING (
+    auth.jwt() ->> 'role' = 'admin'
+);
+
+-- Service role can do everything
+CREATE POLICY "Service role full access stripe" ON stripe_accounts FOR ALL USING (
+    auth.role() = 'service_role'
+);
+
+CREATE POLICY "Service role full access reconciliation" ON reconciliation_logs FOR ALL USING (
+    auth.role() = 'service_role'
+);
+
+-- ============================================
+-- COMMENTS
+-- ============================================
+
+COMMENT ON TABLE stripe_accounts IS 'Links GlowUp3 users to their Stripe customer/connect accounts';
+COMMENT ON COLUMN stripe_accounts.stripe_customer_id IS 'Stripe Customer ID for customer payments';
+COMMENT ON COLUMN stripe_accounts.stripe_account_id IS 'Stripe Connect Account ID for professionals to receive payouts';
+
+COMMENT ON TABLE reconciliation_logs IS 'Audit trail for financial reconciliation between Supabase and Stripe';
+COMMENT ON COLUMN reconciliation_logs.discrepancy_amount IS 'Absolute difference in CZK cents between Supabase and Stripe totals';

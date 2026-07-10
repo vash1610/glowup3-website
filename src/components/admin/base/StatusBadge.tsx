@@ -5,7 +5,8 @@ import React from 'react';
 type StatusType = 
   | 'success' | 'warning' | 'error' | 'info' | 'pending' | 'neutral'
   | 'active' | 'inactive' | 'completed' | 'cancelled' | 'refunded' | 'failed'
-  | 'paid' | 'unpaid' | 'partial' | 'draft';
+  | 'paid' | 'unpaid' | 'partial' | 'draft'
+  | 'held' | 'released';
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -31,6 +32,8 @@ const statusConfig: Record<StatusType, { color: string; bgColor: string; label: 
   unpaid: { color: 'text-red-400', bgColor: 'bg-red-400/10', label: 'Unpaid' },
   partial: { color: 'text-yellow-400', bgColor: 'bg-yellow-400/10', label: 'Partial' },
   draft: { color: 'text-gray-400', bgColor: 'bg-gray-400/10', label: 'Draft' },
+  held: { color: 'text-violet-400', bgColor: 'bg-violet-400/10', label: 'Held' },
+  released: { color: 'text-emerald-400', bgColor: 'bg-emerald-400/10', label: 'Released' },
 };
 
 const sizeClasses = {

@@ -29,7 +29,7 @@ export default function CareersPage() {
       <section className={styles.hero}>
         <div className={styles.container}>
           <Link href="/" className={styles.backLink}>← Back to Home</Link>
-          <h1 className={styles.title}>Join the GlowUp3 Team</h1>
+          <h1 className={styles.title}>Join the Todayly Team</h1>
           <p className={styles.subtitle}>Help us build the future of beauty booking. We're looking for passionate people who love what they do.</p>
         </div>
       </section>

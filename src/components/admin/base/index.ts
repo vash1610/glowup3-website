@@ -14,3 +14,4 @@ export { default as TabsNav, TabPanel } from './TabsNav';
 export { default as SearchInput } from './SearchInput';
 export { default as UserAvatar } from './UserAvatar';
 export { default as QuickAction } from './QuickAction';
+export { default as BetaBadge } from './BetaBadge';

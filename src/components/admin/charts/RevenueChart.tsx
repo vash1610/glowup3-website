@@ -20,22 +20,11 @@ interface RevenueChartProps {
   }>;
 }
 
-const generateMockData = () => {
-  const data = [];
-  const today = new Date();
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    data.push({
-      date: date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' }),
-      revenue: Math.floor(Math.random() * 15000) + 5000
-    });
-  }
-  return data;
-};
-
 export default function RevenueChart({ data }: RevenueChartProps) {
-  const chartData = data || generateMockData();
+  const chartData = (data || []).map((d) => ({
+    ...d,
+    date: new Date(d.date).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' }),
+  }));
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('cs-CZ', {
@@ -68,7 +57,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
       </div>
       
       <div className="h-72">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer minWidth={0} minHeight={0} width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">

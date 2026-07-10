@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 
 function createAdminClient() {
   const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://ydnmhnutaitmbeybpwxc.supabase.co';
@@ -15,34 +15,32 @@ function createAdminClient() {
   });
 }
 
-async function verifyAdminSession(): Promise<{ valid: boolean; userId?: string; error?: string }> {
-  try {
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get('admin_session')?.value;
-    
-    if (!sessionToken) {
-      return { valid: false, error: 'No session token' };
-    }
-    
-    const session = JSON.parse(Buffer.from(sessionToken, 'base64').toString());
-    
-    if (!session.userId || !session.isAdmin || session.exp < Date.now()) {
-      return { valid: false, error: 'Invalid or expired session' };
-    }
-    
-    return { valid: true, userId: session.userId };
-  } catch {
-    return { valid: false, error: 'Invalid session format' };
-  }
-}
-
 async function logAdminAction(adminId: string, action: string, details: Record<string, unknown>) {
   console.log(`[ADMIN AUDIT] ${new Date().toISOString()} | Admin: ${adminId} | Action: ${action} | Details:`, details);
 }
 
+// Helper function to get wallet balance for a user
+async function getWalletBalance(supabase: any, userId: string, ownerType: 'customer' | 'professional'): Promise<number | null> {
+  const table = ownerType === 'professional' ? 'pro_wallets' : 'customer_wallets';
+  const idColumn = ownerType === 'professional' ? 'pro_id' : 'customer_id';
+
+  const { data, error } = await supabase
+    .from(table)
+    .select('balance')
+    .eq(idColumn, userId)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  // customer_wallets/pro_wallets store plain CZK, not cents - no conversion needed
+  return (data as { balance: number }).balance;
+}
+
 export async function GET(request: NextRequest) {
   try {
-    const session = await verifyAdminSession();
+    const session = await requireAdminSession();
     if (!session.valid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -111,16 +109,44 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Format and combine results
-    const formattedCustomers = (customers || []).map(c => ({
-      ...c,
-      user_type: 'customer'
-    }));
+    // Helper to normalize display_name for any user
+    const normalizeDisplayName = (user: Record<string, any>): string => {
+      const fullName = user.full_name;
+      const displayName = user.display_name || '';
+      const firstName = user.first_name || '';
+      const lastName = user.last_name || '';
+      
+      return fullName 
+        || (displayName.trim() || '') 
+        || (firstName && lastName ? `${firstName} ${lastName}` : firstName) 
+        || 'Unknown User';
+    };
+
+    // Format and combine results with wallet balances
+    const formattedCustomers = await Promise.all(
+      (customers || []).map(async (c) => {
+        const wallet_balance = await getWalletBalance(supabase, c.id, 'customer');
+        return {
+          ...c,
+          user_type: 'customer',
+          wallet_balance,
+          display_name: normalizeDisplayName(c)
+        };
+      })
+    );
     
-    const formattedPros = (professionals as Array<Record<string, unknown>>).map(p => ({
-      ...p,
-      user_type: 'professional'
-    }));
+    const formattedPros = await Promise.all(
+      (professionals as Array<Record<string, unknown>>).map(async (p) => {
+        const wallet_balance = await getWalletBalance(supabase, p.id as string, 'professional');
+        const pro = p as Record<string, any>;
+        return {
+          ...p,
+          user_type: 'professional',
+          wallet_balance,
+          display_name: normalizeDisplayName(pro)
+        };
+      })
+    );
 
     const allUsers = [...formattedCustomers, ...formattedPros];
     const totalCount = (customerCount || 0) + professionalCount;

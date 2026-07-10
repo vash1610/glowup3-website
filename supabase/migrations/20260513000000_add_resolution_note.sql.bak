@@ -1,0 +1,2 @@
+-- Add resolution_note column to support_tickets
+ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS resolution_note TEXT;

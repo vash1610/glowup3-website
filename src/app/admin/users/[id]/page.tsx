@@ -23,6 +23,7 @@ import {
   CreditCard,
   History
 } from 'lucide-react';
+import AdminNav from '@/components/admin/AdminNav';
 
 interface Booking {
   id: string;
@@ -183,8 +184,10 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
   const statusConfig = getStatusBadge(user.status);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="max-w-[1400px] mx-auto p-6">
+      <AdminNav />
+      <div style={{ height: '64px' }} />
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
@@ -495,6 +498,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -12,13 +12,15 @@ import {
   Table,
   FileJson,
   FileSpreadsheet,
-  Loader2
+  Loader2,
+  Plus,
+  MoreHorizontal
 } from 'lucide-react';
 import AdminNav from '@/components/admin/AdminNav';
 
 interface TableInfo {
   table_name: string;
-  estimated_row_count: number;
+  table_type: string;
 }
 
 interface Column {
@@ -52,6 +54,9 @@ export default function DatabasePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchColumn, setSearchColumn] = useState<string>('');
   const [tableDropOpen, setTableDropOpen] = useState(false);
+  const [showTablesSection, setShowTablesSection] = useState(true);
+  const [tablesError, setTablesError] = useState<string | null>(null);
+  const [dataError, setDataError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTables();
@@ -65,15 +70,25 @@ export default function DatabasePage() {
 
   const fetchTables = async () => {
     setLoadingTables(true);
+    setTablesError(null);
     try {
       const response = await fetch('/api/admin/tables');
       const data = await response.json();
-      setTables(data.tables || []);
-      if (data.tables?.length > 0 && !selectedTable) {
-        setSelectedTable(data.tables[0].table_name);
+
+      if (!response.ok) {
+        throw new Error(data.error || `Failed to load tables (${response.status})`);
+      }
+
+      const tableList: TableInfo[] = data.tables || [];
+      setTables(tableList);
+
+      if (tableList.length > 0 && !selectedTable) {
+        setSelectedTable(tableList[0].table_name);
       }
     } catch (error) {
       console.error('Error fetching tables:', error);
+      setTables([]);
+      setTablesError(error instanceof Error ? error.message : 'Failed to load tables');
     } finally {
       setLoadingTables(false);
     }
@@ -81,26 +96,38 @@ export default function DatabasePage() {
 
   const fetchTableData = async () => {
     setLoading(true);
+    setDataError(null);
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        pageSize: pageSize.toString(),
+        limit: pageSize.toString(),
       });
       if (sortColumn) {
-        params.append('sort', sortColumn);
-        params.append('direction', sortDirection);
+        params.append('sortBy', sortColumn);
+        params.append('sortOrder', sortDirection);
       }
       if (searchQuery && searchColumn) {
-        params.append('search', searchQuery);
-        params.append('searchColumn', searchColumn);
+        params.append(searchColumn, `^${searchQuery}`);
       }
 
-      const response = await fetch(`/api/admin/tables/${selectedTable}?${params}`);
+      const response = await fetch(`/api/admin/tables/${encodeURIComponent(selectedTable)}?${params}`);
       const data = await response.json();
-      setTableData(data);
+
+      if (!response.ok) {
+        throw new Error(data.error || `Failed to load table data (${response.status})`);
+      }
+
       setColumns(data.columns || []);
+      setTableData({
+        columns: data.columns || [],
+        rows: data.data || [],
+        totalCount: data.pagination?.total || 0,
+      });
     } catch (error) {
       console.error('Error fetching table data:', error);
+      setTableData(null);
+      setColumns([]);
+      setDataError(error instanceof Error ? error.message : 'Failed to load table data');
     } finally {
       setLoading(false);
     }
@@ -169,7 +196,7 @@ export default function DatabasePage() {
   return (
     <>
       <AdminNav />
-      <div className="space-y-6">
+      <div className="max-w-[1400px] mx-auto p-6 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white">Database Viewer</h1>
@@ -177,14 +204,97 @@ export default function DatabasePage() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => fetchTableData()}
+              onClick={() => fetchTables()}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 transition-colors"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loadingTables ? 'animate-spin' : ''}`} />
               Refresh
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white font-medium hover:opacity-90 transition-opacity">
+              <Plus className="w-4 h-4" />
+              Create Table
             </button>
           </div>
         </div>
+
+        {/* Tables Overview Section */}
+        {showTablesSection && (
+          <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <h2 className="text-lg font-semibold text-white">All Tables ({tables.length})</h2>
+              <button
+                onClick={() => setShowTablesSection(false)}
+                className="text-white/40 hover:text-white/60 transition-colors"
+              >
+                <ChevronDown className="w-5 h-5 rotate-180" />
+              </button>
+            </div>
+            {loadingTables ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 text-[#667eea] animate-spin" />
+              </div>
+            ) : tablesError ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
+                <p className="text-red-400 font-medium">Failed to load tables</p>
+                <p className="text-white/40 text-sm">{tablesError}</p>
+                <button
+                  onClick={() => fetchTables()}
+                  className="mt-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-white/5">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-white/60">Table Name</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-white/60">Type</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-white/60">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {tables.map((table) => (
+                      <tr 
+                        key={table.table_name} 
+                        className={`hover:bg-white/[0.02] cursor-pointer ${selectedTable === table.table_name ? 'bg-white/10' : ''}`}
+                        onClick={() => {
+                          setSelectedTable(table.table_name);
+                          setCurrentPage(1);
+                        }}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <Table className="w-4 h-4 text-white/40" />
+                            <span className="text-white font-medium">{table.table_name}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-white/60">{table.table_type}</td>
+                        <td className="px-4 py-3">
+                          <button className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white/60 transition-colors">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Show Tables Section Button */}
+        {!showTablesSection && (
+          <button
+            onClick={() => setShowTablesSection(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 transition-colors"
+          >
+            <Table className="w-4 h-4" />
+            Show All Tables ({tables.length})
+          </button>
+        )}
 
         <div className="relative">
           <div className="flex flex-col lg:flex-row gap-4">
@@ -216,9 +326,7 @@ export default function DatabasePage() {
                       }`}
                     >
                       <span className="text-white">{table.table_name}</span>
-                      <span className="text-white/40 text-sm">
-                        {table.estimated_row_count?.toLocaleString() || 0} rows
-                      </span>
+                      <span className="text-white/40 text-sm">{table.table_type}</span>
                     </button>
                   ))}
                 </div>
@@ -283,6 +391,17 @@ export default function DatabasePage() {
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 text-[#667eea] animate-spin" />
+          </div>
+        ) : dataError ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center gap-2">
+            <p className="text-red-400 font-medium">Failed to load table data</p>
+            <p className="text-white/40 text-sm">{dataError}</p>
+            <button
+              onClick={() => fetchTableData()}
+              className="mt-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors"
+            >
+              Retry
+            </button>
           </div>
         ) : tableData && columns.length > 0 ? (
           <div className="rounded-xl border border-white/10 overflow-hidden">

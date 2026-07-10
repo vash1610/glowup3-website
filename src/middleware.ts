@@ -1,27 +1,33 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Public paths that bypass auth
+// Paths that must stay reachable without an admin session — this is the
+// login flow itself, nothing else. Every other /admin and /api/admin route
+// is gated. (Verification endpoints used to be listed here too; they now
+// require a real session like everything else and are checked per-route via
+// requireAdminSession().)
 const PUBLIC_PATHS = [
   '/login/admin',
   '/login/admin/verify',
   '/api/admin/auth/initiate',
   '/api/admin/auth/verify',
+  '/api/admin/auth/resend',
   '/_next',
   '/favicon.svg',
 ];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
-  // ADMIN DASHBOARD: Check session for admin routes
+
   if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
-    // Allow public admin auth paths
-    if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
+    if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
       return NextResponse.next();
     }
-    
-    // Check for admin session
+
+    // Fast-fail on missing cookie at the edge. This is not the source of
+    // truth — every route still calls requireAdminSession() to validate the
+    // token against the database — but it avoids hitting Postgres at all for
+    // the common case of an anonymous request.
     const sessionToken = request.cookies.get('admin_session')?.value;
     if (!sessionToken) {
       if (pathname.startsWith('/api/admin')) {
@@ -31,37 +37,7 @@ export function middleware(request: NextRequest) {
     }
     return NextResponse.next();
   }
-  
-  // DEVELOPMENT AUTH: Basic Auth for all other routes (except public paths)
-  if (process.env.NODE_ENV === 'development') {
-    // Skip auth for public paths
-    if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
-      return NextResponse.next();
-    }
-    
-    const authHeader = request.headers.get('authorization');
-    
-    if (authHeader) {
-      try {
-        const [username, password] = atob(authHeader.split(' ')[1]).split(':');
-        // Change these credentials to whatever you want
-        if (username === 'glowup' && password === 'Valeriia@1234') {
-          return NextResponse.next();
-        }
-      } catch {
-        // Invalid auth header format
-      }
-    }
-    
-    // Return 401 Unauthorized with Basic Auth challenge
-    return new NextResponse('Authentication required', {
-      status: 401,
-      headers: {
-        'WWW-Authenticate': 'Basic realm="GlowUp3 Dev Access"',
-      },
-    });
-  }
-  
+
   return NextResponse.next();
 }
 

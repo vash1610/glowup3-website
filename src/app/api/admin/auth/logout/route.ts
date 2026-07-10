@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { invalidateSession } from '@/lib/auth-utils';
+import { logout } from '@/lib/admin-auth';
+
+const SESSION_COOKIE = 'admin_session';
 
 export async function POST(request: NextRequest) {
-  const sessionToken = request.cookies.get('admin_session')?.value;
-  
+  const sessionToken = request.cookies.get(SESSION_COOKIE)?.value;
+
   if (sessionToken) {
-    await invalidateSession(sessionToken);
+    await logout(sessionToken);
   }
-  
+
   const response = NextResponse.json({ success: true });
-  response.cookies.delete('admin_session');
-  
+  response.cookies.delete(SESSION_COOKIE);
+
   return response;
 }

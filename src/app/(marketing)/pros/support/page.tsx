@@ -24,7 +24,7 @@ export default function SupportPage() {
         <div className={styles.container}>
           <Link href="/" className={styles.backLink}>← Back to Home</Link>
           <h1 className={styles.title}>Pro Support</h1>
-          <p className={styles.subtitle}>Everything you need to succeed on GlowUp3</p>
+          <p className={styles.subtitle}>Everything you need to succeed on Todayly</p>
         </div>
       </section>
 

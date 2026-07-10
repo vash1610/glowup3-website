@@ -124,14 +124,12 @@ export default function VerifyCodePage() {
     setResendCooldown(60); // 60 second cooldown
 
     try {
-      // Re-initiate login to get new code
-      // In a real app, you'd have a separate resend endpoint
-      const response = await fetch('/api/admin/auth/initiate', {
+      const response = await fetch('/api/admin/auth/resend', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, passkey: 'placeholder' }),
+        body: JSON.stringify({ email }),
       });
 
       const data = await response.json();
@@ -338,7 +336,7 @@ export default function VerifyCodePage() {
         {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-sm text-slate-500">
-            &copy; {new Date().getFullYear()} GlowUp3. All rights reserved.
+            &copy; {new Date().getFullYear()} Todayly. All rights reserved.
           </p>
         </div>
       </div>
